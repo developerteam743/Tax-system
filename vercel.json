@@ -1,0 +1,42 @@
+{
+  "version": 2,
+  "buildCommand": "node scripts/build.js && node scripts/smokeTest.js",
+  "outputDirectory": ".",
+  "routes": [
+    {
+      "src": "/api/ocr/analyze",
+      "dest": "/api/ocr.js"
+    },
+    {
+      "src": "/dist/assets/(.*)",
+      "dest": "/dist/assets/$1"
+    },
+    {
+      "src": "/(.*\\.(?:js|css|png|jpg|jpeg|gif|ico|svg|json|woff2?))",
+      "dest": "/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        }
+      ]
+    }
+  ]
+}
