@@ -2,7 +2,17 @@ namespace TaxFlow.Backend.Models;
 
 public sealed record TallyLedgerDto(string Name, string? Parent, string? Gstin, decimal? ClosingBalance);
 public sealed record TallyStockItemDto(string Name, string? Hsn, string? BaseUnits, decimal? ClosingBalance);
-public sealed record TallyVoucherDto(string VoucherType, string VoucherNumber, DateTime? Date, string? PartyName, string? Reference, decimal Amount);
+public sealed record TallyVoucherLineDto(string? StockItemName, decimal Quantity, string? Unit, decimal Rate, decimal Amount, decimal GstRate);
+public sealed record TallyLedgerLineDto(string LedgerName, decimal Amount, bool IsDeemedPositive);
+public sealed record TallyVoucherDto(
+    string VoucherType,
+    string VoucherNumber,
+    DateTime? Date,
+    string? PartyName,
+    string? Reference,
+    decimal Amount,
+    IReadOnlyCollection<TallyVoucherLineDto> InventoryLines,
+    IReadOnlyCollection<TallyLedgerLineDto> LedgerLines);
 public sealed record TallyMasterMatchDto(string TaxFlowName, string TallyName, string MatchType, decimal Score, string? Gstin = null);
 public sealed record TallyReconciliationDto(string Key, string Status, string? TaxFlowNumber, string? TallyNumber, decimal? TaxFlowAmount, decimal? TallyAmount, decimal? Difference, string? PartyName, string VoucherType, DateTime? Date);
 
