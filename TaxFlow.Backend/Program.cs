@@ -13,11 +13,17 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<TaxFlowDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=taxflow.db"));
 
-// Register Business ERP Services
+// Business ERP services
 builder.Services.AddScoped<IGstService, GstService>();
 builder.Services.AddScoped<ITallyExporterService, TallyExporterService>();
 builder.Services.AddScoped<IGstr1ExporterService, Gstr1ExporterService>();
 builder.Services.AddScoped<IBankMatcherService, BankMatcherService>();
+
+// TallyPrime communicates through its local/network HTTP gateway (default commonly 9000).
+builder.Services.AddHttpClient<ITallyIntegrationService, TallyIntegrationService>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
 
 // Enable CORS for React Web & Mobile App
 builder.Services.AddCors(options =>
@@ -35,7 +41,7 @@ using (var scope = app.Services.CreateScope())
     db.Database.EnsureCreated();
 }
 
-// Enable Swagger UI unconditionally
+// Swagger UI
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
@@ -47,7 +53,6 @@ app.UseCors("AllowAll");
 app.UseAuthorization();
 app.MapControllers();
 
-// Redirect root GET / to Swagger UI
 app.MapGet("/", () => Results.Redirect("/swagger"));
 
 app.Run();
