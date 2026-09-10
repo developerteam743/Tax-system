@@ -1,7 +1,6 @@
 using System.Net.Http.Headers;
 using System.Text;
 using System.Xml.Linq;
-using TaxFlow.Backend.Data;
 using TaxFlow.Backend.Models;
 
 namespace TaxFlow.Backend.Services;
@@ -22,16 +21,12 @@ public interface ITallyIntegrationService
 public sealed class TallyIntegrationService : ITallyIntegrationService
 {
     private readonly HttpClient _http;
-
     public TallyIntegrationService(HttpClient http) => _http = http;
 
     public async Task<TallyConnectionResult> TestConnectionAsync(string baseUrl, string? companyName = null, CancellationToken cancellationToken = default)
     {
         var url = NormalizeUrl(baseUrl);
-        var xml = companyName is null
-            ? BuildListCompaniesRequest()
-            : BuildPingRequest(companyName);
-
+        var xml = companyName is null ? BuildListCompaniesRequest() : BuildPingRequest(companyName);
         try
         {
             var response = await PostXmlAsync(url, xml, cancellationToken);
@@ -40,30 +35,17 @@ public sealed class TallyIntegrationService : ITallyIntegrationService
             return new TallyConnectionResult(connected, connected ? "TallyPrime HTTP endpoint is reachable." : "TallyPrime returned an error.", names.FirstOrDefault(), response);
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
-        {
-            return new TallyConnectionResult(false, $"Unable to reach TallyPrime at {url}. {ex.Message}");
-        }
+        { return new TallyConnectionResult(false, $"Unable to reach TallyPrime at {url}. {ex.Message}"); }
     }
 
     public async Task<TallySyncResult> PushSalesAsync(string baseUrl, string companyName, IReadOnlyCollection<SalesInvoice> invoices, CancellationToken cancellationToken = default)
-    {
-        if (invoices.Count == 0) return new(true, "No sales invoices to push.", 0);
-        var xml = BuildSalesImport(companyName, invoices);
-        return await PushAsync(baseUrl, xml, invoices.Count, cancellationToken);
-    }
+        => invoices.Count == 0 ? new(true, "No sales invoices to push.", 0) : await PushAsync(baseUrl, BuildSalesImport(companyName, invoices), invoices.Count, cancellationToken);
 
     public async Task<TallySyncResult> PushPurchasesAsync(string baseUrl, string companyName, IReadOnlyCollection<PurchaseInvoice> invoices, CancellationToken cancellationToken = default)
-    {
-        if (invoices.Count == 0) return new(true, "No purchase invoices to push.", 0);
-        var xml = BuildPurchaseImport(companyName, invoices);
-        return await PushAsync(baseUrl, xml, invoices.Count, cancellationToken);
-    }
+        => invoices.Count == 0 ? new(true, "No purchase invoices to push.", 0) : await PushAsync(baseUrl, BuildPurchaseImport(companyName, invoices), invoices.Count, cancellationToken);
 
     public async Task<TallySyncResult> PushMastersAsync(string baseUrl, string companyName, IReadOnlyCollection<Party> parties, IReadOnlyCollection<StockItem> stock, CancellationToken cancellationToken = default)
-    {
-        var xml = BuildMasterImport(companyName, parties, stock);
-        return await PushAsync(baseUrl, xml, parties.Count + stock.Count, cancellationToken);
-    }
+        => await PushAsync(baseUrl, BuildMasterImport(companyName, parties, stock), parties.Count + stock.Count, cancellationToken);
 
     public async Task<TallyConnectionResult> PullCompaniesAsync(string baseUrl, CancellationToken cancellationToken = default)
     {
@@ -74,9 +56,7 @@ public sealed class TallyIntegrationService : ITallyIntegrationService
             return new TallyConnectionResult(true, $"Received {names.Count} company name(s) from TallyPrime.", names.FirstOrDefault(), response);
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
-        {
-            return new TallyConnectionResult(false, ex.Message);
-        }
+        { return new TallyConnectionResult(false, ex.Message); }
     }
 
     public async Task<TallyConnectionResult> PullDaybookAsync(string baseUrl, string companyName, DateTime from, DateTime to, CancellationToken cancellationToken = default)
@@ -87,9 +67,7 @@ public sealed class TallyIntegrationService : ITallyIntegrationService
             return new TallyConnectionResult(true, "Daybook response received from TallyPrime.", companyName, response);
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
-        {
-            return new TallyConnectionResult(false, ex.Message, companyName);
-        }
+        { return new TallyConnectionResult(false, ex.Message, companyName); }
     }
 
     private async Task<TallySyncResult> PushAsync(string baseUrl, string xml, int requested, CancellationToken cancellationToken)
@@ -105,9 +83,7 @@ public sealed class TallyIntegrationService : ITallyIntegrationService
                 : new(false, $"TallyPrime reported {errors} error(s). Review the raw response.", requested, imported, response);
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
-        {
-            return new(false, ex.Message, requested);
-        }
+        { return new(false, ex.Message, requested); }
     }
 
     private async Task<string> PostXmlAsync(string url, string xml, CancellationToken cancellationToken)
@@ -126,35 +102,15 @@ public sealed class TallyIntegrationService : ITallyIntegrationService
         return url.Trim().TrimEnd('/');
     }
 
-    private static string BuildListCompaniesRequest() =>
-        "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ENVELOPE><HEADER><VERSION>1</VERSION><TALLYREQUEST>Export</TALLYREQUEST><TYPE>Data</TYPE><ID>List of Companies</ID></HEADER><BODY><DESC><STATICVARIABLES><SVEXPORTFORMAT>$$SysName:XML</SVEXPORTFORMAT></STATICVARIABLES></DESC></BODY></ENVELOPE>";
-
-    private static string BuildPingRequest(string companyName) =>
-        $"<?xml version=\"1.0\" encoding=\"UTF-8\"?><ENVELOPE><HEADER><VERSION>1</VERSION><TALLYREQUEST>Export</TALLYREQUEST><TYPE>Data</TYPE><ID>List of Companies</ID></HEADER><BODY><DESC><STATICVARIABLES><SVCURRENTCOMPANY>{Escape(companyName)}</SVCURRENTCOMPANY><SVEXPORTFORMAT>$$SysName:XML</SVEXPORTFORMAT></STATICVARIABLES></DESC></BODY></ENVELOPE>";
+    private static string BuildListCompaniesRequest() => "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ENVELOPE><HEADER><VERSION>1</VERSION><TALLYREQUEST>Export</TALLYREQUEST><TYPE>Data</TYPE><ID>List of Companies</ID></HEADER><BODY><DESC><STATICVARIABLES><SVEXPORTFORMAT>$$SysName:XML</SVEXPORTFORMAT></STATICVARIABLES></DESC></BODY></ENVELOPE>";
+    private static string BuildPingRequest(string companyName) => $"<?xml version=\"1.0\" encoding=\"UTF-8\"?><ENVELOPE><HEADER><VERSION>1</VERSION><TALLYREQUEST>Export</TALLYREQUEST><TYPE>Data</TYPE><ID>List of Companies</ID></HEADER><BODY><DESC><STATICVARIABLES><SVCURRENTCOMPANY>{Escape(companyName)}</SVCURRENTCOMPANY><SVEXPORTFORMAT>$$SysName:XML</SVEXPORTFORMAT></STATICVARIABLES></DESC></BODY></ENVELOPE>";
 
     private static string BuildSalesImport(string companyName, IEnumerable<SalesInvoice> invoices)
     {
         var messages = invoices.Select(inv =>
         {
-            var voucher = new XElement("VOUCHER",
-                new XAttribute("ACTION", "Create"),
-                new XElement("DATE", inv.Date.ToString("yyyyMMdd")),
-                new XElement("VOUCHERTYPENAME", "Sales"),
-                new XElement("VOUCHERNUMBER", inv.InvoiceNumber),
-                new XElement("PARTYLEDGERNAME", inv.PartyName),
-                new XElement("PERSISTEDVIEW", "Invoice View"),
-                new XElement("REFERENCE", inv.InvoiceNumber),
-                Ledger(inv.PartyName, true, -inv.GrandTotal));
-            foreach (var item in inv.Items)
-            {
-                voucher.Add(new XElement("ALLINVENTORYENTRIES.LIST",
-                    new XElement("STOCKITEMNAME", item.Description),
-                    new XElement("ISDEEMEDPOSITIVE", "NO"),
-                    new XElement("RATE", item.Rate),
-                    new XElement("ACTUALQTY", $"{item.Qty} {item.Unit}"),
-                    new XElement("BILLEDQTY", $"{item.Qty} {item.Unit}"),
-                    new XElement("AMOUNT", -item.TaxableValue)));
-            }
+            var voucher = new XElement("VOUCHER", new XAttribute("ACTION", "Create"), new XElement("DATE", inv.Date.ToString("yyyyMMdd")), new XElement("VOUCHERTYPENAME", "Sales"), new XElement("VOUCHERNUMBER", inv.InvoiceNumber), new XElement("PARTYLEDGERNAME", inv.PartyName), new XElement("PERSISTEDVIEW", "Invoice View"), new XElement("REFERENCE", inv.InvoiceNumber), Ledger(inv.PartyName, true, -inv.GrandTotal));
+            foreach (var item in inv.Items) voucher.Add(new XElement("ALLINVENTORYENTRIES.LIST", new XElement("STOCKITEMNAME", item.Description), new XElement("ISDEEMEDPOSITIVE", "NO"), new XElement("RATE", item.Rate), new XElement("ACTUALQTY", $"{item.Qty} {item.Unit}"), new XElement("BILLEDQTY", $"{item.Qty} {item.Unit}"), new XElement("AMOUNT", -item.TaxableValue)));
             voucher.Add(Ledger("Sales Accounts", false, inv.Subtotal));
             if (inv.CgstTotal > 0) { voucher.Add(Ledger("Output CGST", false, inv.CgstTotal)); voucher.Add(Ledger("Output SGST", false, inv.SgstTotal)); }
             if (inv.IgstTotal > 0) voucher.Add(Ledger("Output IGST", false, inv.IgstTotal));
@@ -167,16 +123,8 @@ public sealed class TallyIntegrationService : ITallyIntegrationService
     {
         var messages = invoices.Select(inv =>
         {
-            var voucher = new XElement("VOUCHER",
-                new XAttribute("ACTION", "Create"),
-                new XElement("DATE", inv.Date.ToString("yyyyMMdd")),
-                new XElement("VOUCHERTYPENAME", "Purchase"),
-                new XElement("VOUCHERNUMBER", inv.InvoiceNumber),
-                new XElement("PARTYLEDGERNAME", inv.SupplierName),
-                new XElement("REFERENCE", inv.InvoiceNumber),
-                Ledger(inv.SupplierName, false, inv.GrandTotal));
-            foreach (var item in inv.Items)
-                voucher.Add(new XElement("ALLINVENTORYENTRIES.LIST", new XElement("STOCKITEMNAME", item.Description), new XElement("ISDEEMEDPOSITIVE", "YES"), new XElement("RATE", item.Rate), new XElement("ACTUALQTY", $"{item.Qty} {item.Unit}"), new XElement("BILLEDQTY", $"{item.Qty} {item.Unit}"), new XElement("AMOUNT", -item.TaxableValue)));
+            var voucher = new XElement("VOUCHER", new XAttribute("ACTION", "Create"), new XElement("DATE", inv.Date.ToString("yyyyMMdd")), new XElement("VOUCHERTYPENAME", "Purchase"), new XElement("VOUCHERNUMBER", inv.InvoiceNumber), new XElement("PARTYLEDGERNAME", inv.SupplierName), new XElement("REFERENCE", inv.InvoiceNumber), Ledger(inv.SupplierName, false, inv.GrandTotal));
+            foreach (var item in inv.Items) voucher.Add(new XElement("ALLINVENTORYENTRIES.LIST", new XElement("STOCKITEMNAME", item.Description), new XElement("ISDEEMEDPOSITIVE", "YES"), new XElement("RATE", item.Rate), new XElement("ACTUALQTY", $"{item.Qty} {item.Unit}"), new XElement("BILLEDQTY", $"{item.Qty} {item.Unit}"), new XElement("AMOUNT", -item.TaxableValue)));
             voucher.Add(Ledger("Purchase Accounts", true, -inv.TaxableValue));
             if (inv.CgstTotal > 0) { voucher.Add(Ledger("Input CGST", true, -inv.CgstTotal)); voucher.Add(Ledger("Input SGST", true, -inv.SgstTotal)); }
             if (inv.IgstTotal > 0) voucher.Add(Ledger("Input IGST", true, -inv.IgstTotal));
@@ -188,31 +136,15 @@ public sealed class TallyIntegrationService : ITallyIntegrationService
     private static string BuildMasterImport(string companyName, IEnumerable<Party> parties, IEnumerable<StockItem> stock)
     {
         var messages = new List<XElement>();
-        foreach (var p in parties)
-            messages.Add(new XElement("TALLYMESSAGE", new XElement("LEDGER", new XAttribute("NAME", p.Name), new XAttribute("ACTION", "Create"), new XElement("NAME", p.Name), new XElement("PARENT", p.Type == PartyType.Vendor ? "Sundry Creditors" : "Sundry Debtors"), new XElement("ISBILLWISEON", "Yes"), new XElement("PARTYGSTIN", p.GSTIN))));
-        foreach (var s in stock)
-            messages.Add(new XElement("TALLYMESSAGE", new XElement("STOCKITEM", new XAttribute("NAME", s.Name), new XAttribute("ACTION", "Create"), new XElement("NAME", s.Name), new XElement("PARENT", s.Category), new XElement("BASEUNITS", s.Unit), new XElement("GSTAPPLICABLE", "Applicable"))));
+        foreach (var p in parties) messages.Add(new XElement("TALLYMESSAGE", new XElement("LEDGER", new XAttribute("NAME", p.Name), new XAttribute("ACTION", "Create"), new XElement("NAME", p.Name), new XElement("PARENT", p.Type == PartyType.Vendor ? "Sundry Creditors" : "Sundry Debtors"), new XElement("ISBILLWISEON", "Yes"), new XElement("PARTYGSTIN", p.Gstin))));
+        foreach (var s in stock) messages.Add(new XElement("TALLYMESSAGE", new XElement("STOCKITEM", new XAttribute("NAME", s.Name), new XAttribute("ACTION", "Create"), new XElement("NAME", s.Name), new XElement("PARENT", s.Category), new XElement("BASEUNITS", s.Unit), new XElement("GSTAPPLICABLE", "Applicable"))));
         return Envelope(companyName, messages);
     }
 
-    private static string BuildDaybookRequest(string companyName, DateTime from, DateTime to) =>
-        $"<?xml version=\"1.0\" encoding=\"UTF-8\"?><ENVELOPE><HEADER><VERSION>1</VERSION><TALLYREQUEST>Export</TALLYREQUEST><TYPE>Data</TYPE><ID>Daybook</ID></HEADER><BODY><DESC><STATICVARIABLES><SVCURRENTCOMPANY>{Escape(companyName)}</SVCURRENTCOMPANY><SVFROMDATE>{from:yyyyMMdd}</SVFROMDATE><SVTODATE>{to:yyyyMMdd}</SVTODATE><SVEXPORTFORMAT>$$SysName:XML</SVEXPORTFORMAT></STATICVARIABLES></DESC></BODY></ENVELOPE>";
-
+    private static string BuildDaybookRequest(string companyName, DateTime from, DateTime to) => $"<?xml version=\"1.0\" encoding=\"UTF-8\"?><ENVELOPE><HEADER><VERSION>1</VERSION><TALLYREQUEST>Export</TALLYREQUEST><TYPE>Data</TYPE><ID>Daybook</ID></HEADER><BODY><DESC><STATICVARIABLES><SVCURRENTCOMPANY>{Escape(companyName)}</SVCURRENTCOMPANY><SVFROMDATE>{from:yyyyMMdd}</SVFROMDATE><SVTODATE>{to:yyyyMMdd}</SVTODATE><SVEXPORTFORMAT>$$SysName:XML</SVEXPORTFORMAT></STATICVARIABLES></DESC></BODY></ENVELOPE>";
     private static XElement Ledger(string name, bool positive, decimal amount) => new("ALLLEDGERENTRIES.LIST", new XElement("LEDGERNAME", name), new XElement("ISDEEMEDPOSITIVE", positive ? "YES" : "NO"), new XElement("AMOUNT", amount));
-
     private static string Envelope(string companyName, IEnumerable<XElement> messages) => new XDocument(new XElement("ENVELOPE", new XElement("HEADER", new XElement("TALLYREQUEST", "Import Data")), new XElement("BODY", new XElement("IMPORTDATA", new XElement("REQUESTDESC", new XElement("REPORTNAME", "Vouchers"), new XElement("STATICVARIABLES", new XElement("SVCURRENTCOMPANY", companyName))), new XElement("REQUESTDATA", messages))))).ToString();
-
-    private static List<string> ExtractCompanyNames(string xml)
-    {
-        try { return XDocument.Parse(xml).Descendants("COMPANY").Select(x => (string?)x.Attribute("NAME") ?? x.Value).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.OrdinalIgnoreCase).ToList(); }
-        catch { return new List<string>(); }
-    }
-
-    private static int ExtractNumber(string xml, string element)
-    {
-        try { return int.TryParse(XDocument.Parse(xml).Descendants(element).FirstOrDefault()?.Value, out var n) ? n : 0; }
-        catch { return 0; }
-    }
-
+    private static List<string> ExtractCompanyNames(string xml) { try { return XDocument.Parse(xml).Descendants("COMPANY").Select(x => (string?)x.Attribute("NAME") ?? x.Value).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.OrdinalIgnoreCase).ToList(); } catch { return new List<string>(); } }
+    private static int ExtractNumber(string xml, string element) { try { return int.TryParse(XDocument.Parse(xml).Descendants(element).FirstOrDefault()?.Value, out var n) ? n : 0; } catch { return 0; } }
     private static string Escape(string value) => System.Security.SecurityElement.Escape(value) ?? string.Empty;
 }
