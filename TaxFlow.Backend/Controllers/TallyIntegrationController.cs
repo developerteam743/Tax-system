@@ -105,7 +105,7 @@ public sealed class TallyIntegrationController : ControllerBase
     [HttpPost("pull")]
     public async Task<IActionResult> Pull([FromBody] TallyPullRequest request, CancellationToken ct)
     {
-        var (from, to) = Range(request);
+        if (!TryRange(request, out var from, out var to, out var error)) return BadRequest(new { message = error });
         var result = await _tally.PullDaybookAsync(request.BaseUrl, request.CompanyName, from, to, ct);
         return Ok(new { result, from, to, note = "Read-only pull; no TaxFlow records are mutated." });
     }
@@ -125,7 +125,7 @@ public sealed class TallyIntegrationController : ControllerBase
     [HttpPost("reconcile")]
     public async Task<IActionResult> Reconcile([FromBody] TallyPullRequest request, CancellationToken ct)
     {
-        var (from, to) = Range(request);
+        if (!TryRange(request, out var from, out var to, out var error)) return BadRequest(new { message = error });
         var pulled = await _tally.PullVouchersAsync(request.BaseUrl, request.CompanyName, from, to, ct);
         var sales = await _db.SalesInvoices.AsNoTracking().Where(x => x.Date >= from && x.Date <= to).ToListAsync(ct);
         var purchases = await _db.PurchaseInvoices.AsNoTracking().Where(x => x.Date >= from && x.Date <= to).ToListAsync(ct);
@@ -179,12 +179,17 @@ public sealed class TallyIntegrationController : ControllerBase
         return Convert.ToHexString(bytes).ToLowerInvariant();
     }
 
-    private static (DateTime From, DateTime To) Range(TallyPullRequest request)
+    private static bool TryRange(TallyPullRequest request, out DateTime from, out DateTime to, out string? error)
     {
-        var from = (request.From ?? DateTime.UtcNow.Date.AddDays(-30)).Date;
-        var to = (request.To ?? DateTime.UtcNow.Date).Date;
-        if (from > to) throw new ArgumentException("From date cannot be after To date.");
-        return (from, to);
+        from = (request.From ?? DateTime.UtcNow.Date.AddDays(-30)).Date;
+        to = (request.To ?? DateTime.UtcNow.Date).Date;
+        if (from > to)
+        {
+            error = "From date cannot be after To date.";
+            return false;
+        }
+        error = null;
+        return true;
     }
 
     private sealed record LocalVoucher(string Number, string Type, DateTime Date, string? Party, decimal Amount);
@@ -193,7 +198,7 @@ public sealed class TallyIntegrationController : ControllerBase
         var rows = new List<TallyReconciliationDto>(); var used = new HashSet<int>();
         foreach (var l in local)
         {
-            var index = tally.Select((v, i) => (v, i)).Where(x => !used.Contains(x.i)).OrderBy(x => Score(l, x.v)).FirstOrDefault();
+            var index = tally.Select((v, i) => (v, i)).Where(x => !used.Contains(x.i)).OrderByDescending(x => Score(l, x.v)).FirstOrDefault();
             if (index.v is null || Score(l, index.v) < 50) { rows.Add(new TallyReconciliationDto(Key(l.Type, l.Number), "MissingInTally", l.Number, null, l.Amount, null, null, l.Party, l.Type, l.Date)); continue; }
             used.Add(index.i); var diff = Math.Round(l.Amount - index.v.Amount, 2);
             rows.Add(new TallyReconciliationDto(Key(l.Type, l.Number), diff == 0 ? "Matched" : "AmountMismatch", l.Number, index.v.VoucherNumber, l.Amount, index.v.Amount, diff, l.Party ?? index.v.PartyName, l.Type, l.Date));
