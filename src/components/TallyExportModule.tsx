@@ -9,6 +9,10 @@ interface TallyExportModuleProps {
   purchaseInvoices: PurchaseInvoice[];
 }
 
+type ApplyPreview = { companyName: string; existingParties: number; newParties: number; existingStockItems: number; newStockItems: number; items: { entityType: string; tallyName: string; action: string; matchType: string; score: number; gstin?: string }[] };
+type ApplyResponse = { mode: 'preview'; preview: ApplyPreview; note: string };
+type ApplyResult = { success: boolean; companyName: string; partiesCreated: number; stockItemsCreated: number; skipped: number; errors: string[] };
+
 export const TallyExportModule: React.FC<TallyExportModuleProps> = ({ salesInvoices, purchaseInvoices }) => {
   const [baseUrl, setBaseUrl] = useState('http://localhost:9000');
   const [companyName, setCompanyName] = useState('Apex Electronics & Traders');
@@ -16,7 +20,7 @@ export const TallyExportModule: React.FC<TallyExportModuleProps> = ({ salesInvoi
   const [connected, setConnected] = useState(false);
   const [busy, setBusy] = useState(false);
   const [lastResponse, setLastResponse] = useState('');
-  const [applyPreview, setApplyPreview] = useState<{ companyName: string; existingParties: number; newParties: number; existingStockItems: number; newStockItems: number; items: { entityType: string; tallyName: string; action: string; matchType: string; score: number; gstin?: string }[] } | null>(null);
+  const [applyPreview, setApplyPreview] = useState<ApplyPreview | null>(null);
 
   const run = async (work: () => Promise<void>) => {
     setBusy(true);
@@ -57,13 +61,13 @@ export const TallyExportModule: React.FC<TallyExportModuleProps> = ({ salesInvoi
   });
 
   const previewApply = () => run(async () => {
-    const result = await applyTallyMasters(baseUrl, companyName, false) as typeof applyPreview;
-    setApplyPreview(result);
-    setStatus(`Preview ready: ${result.newParties} new parties and ${result.newStockItems} new stock items.`);
+    const response = await applyTallyMasters(baseUrl, companyName, false) as ApplyResponse;
+    setApplyPreview(response.preview);
+    setStatus(`Preview ready: ${response.preview.newParties} new parties and ${response.preview.newStockItems} new stock items.`);
   });
 
   const confirmApply = () => run(async () => {
-    const result = await applyTallyMasters(baseUrl, companyName, true) as { success: boolean; companyName: string; partiesCreated: number; stockItemsCreated: number; skipped: number; errors: string[] };
+    const result = await applyTallyMasters(baseUrl, companyName, true) as ApplyResult;
     setApplyPreview(null);
     setStatus(result.success ? `Applied ${result.partiesCreated} parties and ${result.stockItemsCreated} stock items; ${result.skipped} existing records skipped.` : `Apply completed with ${result.errors.length} error(s).`);
     setLastResponse(result.errors.join('\n'));
@@ -81,7 +85,6 @@ export const TallyExportModule: React.FC<TallyExportModuleProps> = ({ salesInvoi
             <span className={`w-2 h-2 rounded-full ${connected ? 'bg-emerald-300' : 'bg-slate-300'}`} /> {connected ? 'Tally Connected' : 'Tally Not Connected'}
           </div>
         </div>
-
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-5">
           <label className="text-xs font-semibold text-blue-100">Tally URL<input value={baseUrl} onChange={e => setBaseUrl(e.target.value)} className="mt-1 w-full rounded-lg bg-white text-slate-900 px-3 py-2 outline-none" placeholder="http://localhost:9000" /></label>
           <label className="text-xs font-semibold text-blue-100 md:col-span-2">Tally Company<input value={companyName} onChange={e => setCompanyName(e.target.value)} className="mt-1 w-full rounded-lg bg-white text-slate-900 px-3 py-2 outline-none" placeholder="Exact loaded company name" /></label>
