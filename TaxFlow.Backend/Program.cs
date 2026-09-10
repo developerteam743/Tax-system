@@ -14,6 +14,7 @@ builder.Services.AddScoped<IGstService, GstService>();
 builder.Services.AddScoped<ITallyExporterService, TallyExporterService>();
 builder.Services.AddScoped<IGstr1ExporterService, Gstr1ExporterService>();
 builder.Services.AddScoped<IBankMatcherService, BankMatcherService>();
+builder.Services.AddScoped<ITallyApplyService, TallyApplyService>();
 builder.Services.AddTransient<TallyRemoteIdHandler>();
 builder.Services.AddHttpClient<ITallyIntegrationService, TallyIntegrationService>(client =>
 {
