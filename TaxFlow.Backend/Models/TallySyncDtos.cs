@@ -30,3 +30,26 @@ public sealed record TallyReconciliationPreview(
     int MissingInTally,
     IReadOnlyCollection<TallyReconciliationDto> Rows,
     string RawResponse);
+
+public sealed record TallyVoucherApplyPreviewItem(
+    string VoucherType,
+    string VoucherNumber,
+    DateTime? Date,
+    string? PartyName,
+    string Action,
+    decimal Amount,
+    IReadOnlyCollection<TallyVoucherLineDto> InventoryLines,
+    IReadOnlyCollection<TallyLedgerLineDto> LedgerLines,
+    IReadOnlyCollection<string> Warnings);
+
+public sealed record TallyVoucherApplyPreview(
+    string CompanyName,
+    DateTime From,
+    DateTime To,
+    int TotalVouchers,
+    int CandidateSales,
+    int CandidatePurchases,
+    int Unsupported,
+    int AlreadyImported,
+    IReadOnlyCollection<TallyVoucherApplyPreviewItem> Items,
+    string RawResponse);
