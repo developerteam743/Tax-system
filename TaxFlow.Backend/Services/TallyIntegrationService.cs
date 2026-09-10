@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Xml.Linq;
@@ -76,9 +77,7 @@ public sealed class TallyIntegrationService : ITallyIntegrationService
     {
         var ledgerXml = await PostXmlAsync(NormalizeUrl(baseUrl), BuildLedgerCollectionRequest(companyName), cancellationToken);
         var stockXml = await PostXmlAsync(NormalizeUrl(baseUrl), BuildStockCollectionRequest(companyName), cancellationToken);
-        var ledgers = ParseLedgers(ledgerXml);
-        var stock = ParseStockItems(stockXml);
-        return (ledgers, stock, ledgerXml + "\n\n<!-- STOCK ITEMS -->\n" + stockXml);
+        return (ParseLedgers(ledgerXml), ParseStockItems(stockXml), ledgerXml + "\n\n<!-- STOCK ITEMS -->\n" + stockXml);
     }
 
     public async Task<(IReadOnlyCollection<TallyVoucherDto> Vouchers, string RawResponse)> PullVouchersAsync(string baseUrl, string companyName, DateTime from, DateTime to, CancellationToken cancellationToken = default)
@@ -95,9 +94,7 @@ public sealed class TallyIntegrationService : ITallyIntegrationService
             var errors = ExtractNumber(response, "ERRORS");
             var created = ExtractNumber(response, "CREATED");
             var imported = created > 0 ? created : Math.Max(0, requested - errors);
-            return errors == 0
-                ? new(true, $"TallyPrime accepted the import. {imported} object(s) processed.", requested, imported, response)
-                : new(false, $"TallyPrime reported {errors} error(s). Review the raw response.", requested, imported, response);
+            return errors == 0 ? new(true, $"TallyPrime accepted the import. {imported} object(s) processed.", requested, imported, response) : new(false, $"TallyPrime reported {errors} error(s). Review the raw response.", requested, imported, response);
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
         { return new(false, ex.Message, requested); }
@@ -156,7 +153,7 @@ public sealed class TallyIntegrationService : ITallyIntegrationService
     {
         var messages = new List<XElement>();
         foreach (var p in parties) messages.Add(new XElement("TALLYMESSAGE", new XElement("LEDGER", new XAttribute("NAME", p.Name), new XAttribute("ACTION", "Create"), new XElement("NAME", p.Name), new XElement("PARENT", p.Type == PartyType.Vendor ? "Sundry Creditors" : "Sundry Debtors"), new XElement("ISBILLWISEON", "Yes"), new XElement("PARTYGSTIN", p.Gstin))));
-        foreach (var s in stock) messages.Add(new XElement("TALLYMESSAGE", new XElement("STOCKITEM", new XAttribute("NAME", s.Name), new XAttribute("ACTION", "Create"), new XElement("NAME", s.Name), new XElement("PARENT", string.IsNullOrWhiteSpace(s.Category) ? "Primary" : s.Category), new XElement("BASEUNITS", s.Unit), new XElement("GSTAPPLICABLE", "Applicable"), new XElement("GSTTYPEOFSUPPLY", "Goods"), new XElement("GSTDETAILS.LIST", new XElement("APPLICABLEFROM", DateTime.Today.ToString("yyyyMMdd")), new XElement("STATEWISEDETAILS.LIST", new XElement("STATENAME", "Any"), new XElement("RATEDETAILS.LIST", new XElement("GSTRATE", s.GstRate))))));
+        foreach (var s in stock) messages.Add(new XElement("TALLYMESSAGE", new XElement("STOCKITEM", new XAttribute("NAME", s.Name), new XAttribute("ACTION", "Create"), new XElement("NAME", s.Name), new XElement("PARENT", "Primary"), new XElement("BASEUNITS", s.Unit), new XElement("GSTAPPLICABLE", "Applicable"), new XElement("GSTTYPEOFSUPPLY", "Goods"), new XElement("GSTDETAILS.LIST", new XElement("APPLICABLEFROM", DateTime.Today.ToString("yyyyMMdd")), new XElement("STATEWISEDETAILS.LIST", new XElement("STATENAME", "Any"), new XElement("RATEDETAILS.LIST", new XElement("GSTRATE", s.GstRate))))));
         return Envelope(companyName, messages);
     }
 
@@ -164,33 +161,53 @@ public sealed class TallyIntegrationService : ITallyIntegrationService
     private static XElement Ledger(string name, bool positive, decimal amount) => new("ALLLEDGERENTRIES.LIST", new XElement("LEDGERNAME", name), new XElement("ISDEEMEDPOSITIVE", positive ? "YES" : "NO"), new XElement("AMOUNT", amount));
     private static string Envelope(string companyName, IEnumerable<XElement> messages) => new XDocument(new XElement("ENVELOPE", new XElement("HEADER", new XElement("TALLYREQUEST", "Import Data")), new XElement("BODY", new XElement("IMPORTDATA", new XElement("REQUESTDESC", new XElement("REPORTNAME", "Vouchers"), new XElement("STATICVARIABLES", new XElement("SVCURRENTCOMPANY", companyName))), new XElement("REQUESTDATA", messages))))).ToString();
 
-    private static List<string> ExtractCompanyNames(string xml) { try { return XDocument.Parse(xml).Descendants("COMPANY").Select(x => (string?)x.Attribute("NAME") ?? x.Value).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.OrdinalIgnoreCase).ToList(); } catch { return new List<string>(); } }
+    private static List<string> ExtractCompanyNames(string xml) { try { return XDocument.Parse(xml).Descendants("COMPANY").Select(x => (string?)x.Attribute("NAME") ?? x.Value).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.OrdinalIgnoreCase).ToList(); } catch { return new(); } }
     private static int ExtractNumber(string xml, string element) { try { return int.TryParse(XDocument.Parse(xml).Descendants(element).FirstOrDefault()?.Value, out var n) ? n : 0; } catch { return 0; } }
 
     private static List<TallyLedgerDto> ParseLedgers(string xml)
     {
-        try { return XDocument.Parse(xml).Descendants("LEDGER").Select(x => new TallyLedgerDto(Text(x, "NAME"), Text(x, "PARENT"), Text(x, "PARTYGSTIN") ?? Text(x, "GSTIN"), Decimal(x, "CLOSINGBALANCE"))).Where(x => !string.IsNullOrWhiteSpace(x.Name)).GroupBy(x => x.Name, StringComparer.OrdinalIgnoreCase).Select(g => g.First()).ToList(); }
-        catch { return new(); }
+        try { return XDocument.Parse(xml).Descendants("LEDGER").Select(x => new TallyLedgerDto(Text(x, "NAME"), Text(x, "PARENT"), Text(x, "PARTYGSTIN") ?? Text(x, "GSTIN"), Decimal(x, "CLOSINGBALANCE"))).Where(x => !string.IsNullOrWhiteSpace(x.Name)).GroupBy(x => x.Name, StringComparer.OrdinalIgnoreCase).Select(g => g.First()).ToList(); } catch { return new(); }
     }
 
     private static List<TallyStockItemDto> ParseStockItems(string xml)
     {
-        try { return XDocument.Parse(xml).Descendants("STOCKITEM").Select(x => new TallyStockItemDto(Text(x, "NAME"), Text(x, "HSNDETAILS") ?? Text(x, "HSN"), Text(x, "BASEUNITS"), Decimal(x, "CLOSINGBALANCE"))).Where(x => !string.IsNullOrWhiteSpace(x.Name)).GroupBy(x => x.Name, StringComparer.OrdinalIgnoreCase).Select(g => g.First()).ToList(); }
-        catch { return new(); }
+        try { return XDocument.Parse(xml).Descendants("STOCKITEM").Select(x => new TallyStockItemDto(Text(x, "NAME"), Text(x, "HSNDETAILS") ?? Text(x, "HSN"), Text(x, "BASEUNITS"), ParseQuantity(Text(x, "CLOSINGBALANCE")))).Where(x => !string.IsNullOrWhiteSpace(x.Name)).GroupBy(x => x.Name, StringComparer.OrdinalIgnoreCase).Select(g => g.First()).ToList(); } catch { return new(); }
     }
 
     private static List<TallyVoucherDto> ParseVouchers(string xml)
     {
         try
         {
-            return XDocument.Parse(xml).Descendants("VOUCHER").Select(x => new TallyVoucherDto(Text(x, "VOUCHERTYPENAME") ?? "Unknown", Text(x, "VOUCHERNUMBER") ?? "", ParseDate(Text(x, "DATE")), Text(x, "PARTYLEDGERNAME") ?? Text(x, "PARTYNAME"), Text(x, "REFERENCE") ?? Text(x, "REFERENCE"), Math.Abs(Decimal(x, "AMOUNT") ?? SumLedgerAmounts(x)))).Where(x => !string.IsNullOrWhiteSpace(x.VoucherNumber)).ToList();
+            return XDocument.Parse(xml).Descendants("VOUCHER").Select(x =>
+            {
+                var inventory = x.Descendants("ALLINVENTORYENTRIES.LIST").Select(e => new TallyVoucherLineDto(Text(e, "STOCKITEMNAME"), ParseQuantity(Text(e, "BILLEDQTY") ?? Text(e, "ACTUALQTY")), ExtractUnit(Text(e, "BILLEDQTY") ?? Text(e, "ACTUALQTY")), Math.Abs(Decimal(e, "RATE") ?? 0), Math.Abs(Decimal(e, "AMOUNT") ?? 0), ExtractGstRate(e))).ToList();
+                var ledgers = x.Descendants("LEDGERENTRIES.LIST").Select(e => new TallyLedgerLineDto(Text(e, "LEDGERNAME") ?? "", Math.Abs(Decimal(e, "AMOUNT") ?? 0), string.Equals(Text(e, "ISDEEMEDPOSITIVE"), "YES", StringComparison.OrdinalIgnoreCase))).Where(e => !string.IsNullOrWhiteSpace(e.LedgerName)).ToList();
+                return new TallyVoucherDto(Text(x, "VOUCHERTYPENAME") ?? "Unknown", Text(x, "VOUCHERNUMBER") ?? "", ParseDate(Text(x, "DATE")), Text(x, "PARTYLEDGERNAME") ?? Text(x, "PARTYNAME"), Text(x, "REFERENCE"), Math.Abs(Decimal(x, "AMOUNT") ?? SumLedgerAmounts(x)), inventory, ledgers);
+            }).Where(x => !string.IsNullOrWhiteSpace(x.VoucherNumber)).ToList();
         }
         catch { return new(); }
     }
 
     private static decimal SumLedgerAmounts(XElement x) => x.Descendants("LEDGERENTRIES.LIST").Select(e => Math.Abs(Decimal(e, "AMOUNT") ?? 0)).Sum();
+    private static decimal ParseQuantity(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return 0;
+        var token = value.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
+        return System.Decimal.TryParse(token, NumberStyles.Any, CultureInfo.InvariantCulture, out var number) ? Math.Abs(number) : 0;
+    }
+    private static string? ExtractUnit(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return null;
+        var parts = value.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length > 1 ? string.Join(' ', parts.Skip(1)) : null;
+    }
+    private static decimal ExtractGstRate(XElement e)
+    {
+        var candidates = e.Descendants().Where(x => x.Name.LocalName.Contains("GST", StringComparison.OrdinalIgnoreCase) && x.Name.LocalName.Contains("RATE", StringComparison.OrdinalIgnoreCase)).Select(x => x.Value.Trim());
+        return candidates.Select(v => System.Decimal.TryParse(v, NumberStyles.Any, CultureInfo.InvariantCulture, out var n) ? n : 0).FirstOrDefault();
+    }
     private static string? Text(XElement e, string name) => e.Descendants(name).Select(x => x.Value.Trim()).FirstOrDefault(v => v.Length > 0);
-    private static decimal? Decimal(XElement e, string name) => System.Decimal.TryParse(Text(e, name), out var value) ? value : null;
-    private static DateTime? ParseDate(string? value) => DateTime.TryParseExact(value, "yyyyMMdd", null, System.Globalization.DateTimeStyles.None, out var d) ? d : null;
+    private static decimal? Decimal(XElement e, string name) => System.Decimal.TryParse(Text(e, name), NumberStyles.Any, CultureInfo.InvariantCulture, out var value) ? value : null;
+    private static DateTime? ParseDate(string? value) => DateTime.TryParseExact(value, "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var d) ? d : null;
     private static string Escape(string value) => System.Security.SecurityElement.Escape(value) ?? string.Empty;
 }
