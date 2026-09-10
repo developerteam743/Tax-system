@@ -16,6 +16,8 @@ public interface ITallyIntegrationService
     Task<TallySyncResult> PushMastersAsync(string baseUrl, string companyName, IReadOnlyCollection<Party> parties, IReadOnlyCollection<StockItem> stock, CancellationToken cancellationToken = default);
     Task<TallyConnectionResult> PullCompaniesAsync(string baseUrl, CancellationToken cancellationToken = default);
     Task<TallyConnectionResult> PullDaybookAsync(string baseUrl, string companyName, DateTime from, DateTime to, CancellationToken cancellationToken = default);
+    Task<(IReadOnlyCollection<TallyLedgerDto> Ledgers, IReadOnlyCollection<TallyStockItemDto> StockItems, string RawResponse)> PullMastersAsync(string baseUrl, string companyName, CancellationToken cancellationToken = default);
+    Task<(IReadOnlyCollection<TallyVoucherDto> Vouchers, string RawResponse)> PullVouchersAsync(string baseUrl, string companyName, DateTime from, DateTime to, CancellationToken cancellationToken = default);
 }
 
 public sealed class TallyIntegrationService : ITallyIntegrationService
@@ -70,6 +72,21 @@ public sealed class TallyIntegrationService : ITallyIntegrationService
         { return new TallyConnectionResult(false, ex.Message, companyName); }
     }
 
+    public async Task<(IReadOnlyCollection<TallyLedgerDto> Ledgers, IReadOnlyCollection<TallyStockItemDto> StockItems, string RawResponse)> PullMastersAsync(string baseUrl, string companyName, CancellationToken cancellationToken = default)
+    {
+        var ledgerXml = await PostXmlAsync(NormalizeUrl(baseUrl), BuildLedgerCollectionRequest(companyName), cancellationToken);
+        var stockXml = await PostXmlAsync(NormalizeUrl(baseUrl), BuildStockCollectionRequest(companyName), cancellationToken);
+        var ledgers = ParseLedgers(ledgerXml);
+        var stock = ParseStockItems(stockXml);
+        return (ledgers, stock, ledgerXml + "\n\n<!-- STOCK ITEMS -->\n" + stockXml);
+    }
+
+    public async Task<(IReadOnlyCollection<TallyVoucherDto> Vouchers, string RawResponse)> PullVouchersAsync(string baseUrl, string companyName, DateTime from, DateTime to, CancellationToken cancellationToken = default)
+    {
+        var xml = await PostXmlAsync(NormalizeUrl(baseUrl), BuildDaybookRequest(companyName, from, to), cancellationToken);
+        return (ParseVouchers(xml), xml);
+    }
+
     private async Task<TallySyncResult> PushAsync(string baseUrl, string xml, int requested, CancellationToken cancellationToken)
     {
         try
@@ -104,6 +121,8 @@ public sealed class TallyIntegrationService : ITallyIntegrationService
 
     private static string BuildListCompaniesRequest() => "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ENVELOPE><HEADER><VERSION>1</VERSION><TALLYREQUEST>Export</TALLYREQUEST><TYPE>Data</TYPE><ID>List of Companies</ID></HEADER><BODY><DESC><STATICVARIABLES><SVEXPORTFORMAT>$$SysName:XML</SVEXPORTFORMAT></STATICVARIABLES></DESC></BODY></ENVELOPE>";
     private static string BuildPingRequest(string companyName) => $"<?xml version=\"1.0\" encoding=\"UTF-8\"?><ENVELOPE><HEADER><VERSION>1</VERSION><TALLYREQUEST>Export</TALLYREQUEST><TYPE>Data</TYPE><ID>List of Companies</ID></HEADER><BODY><DESC><STATICVARIABLES><SVCURRENTCOMPANY>{Escape(companyName)}</SVCURRENTCOMPANY><SVEXPORTFORMAT>$$SysName:XML</SVEXPORTFORMAT></STATICVARIABLES></DESC></BODY></ENVELOPE>";
+    private static string BuildLedgerCollectionRequest(string companyName) => $"<?xml version=\"1.0\" encoding=\"UTF-8\"?><ENVELOPE><HEADER><VERSION>1</VERSION><TALLYREQUEST>Export</TALLYREQUEST><TYPE>Collection</TYPE><ID>List of Ledgers</ID></HEADER><BODY><DESC><STATICVARIABLES><SVCURRENTCOMPANY>{Escape(companyName)}</SVCURRENTCOMPANY><SVEXPORTFORMAT>$$SysName:XML</SVEXPORTFORMAT></STATICVARIABLES></DESC></BODY></ENVELOPE>";
+    private static string BuildStockCollectionRequest(string companyName) => $"<?xml version=\"1.0\" encoding=\"UTF-8\"?><ENVELOPE><HEADER><VERSION>1</VERSION><TALLYREQUEST>Export</TALLYREQUEST><TYPE>Data</TYPE><ID>List of Accounts</ID></HEADER><BODY><DESC><STATICVARIABLES><SVCURRENTCOMPANY>{Escape(companyName)}</SVCURRENTCOMPANY><AccountType>Stock Items</AccountType><SVEXPORTFORMAT>$$SysName:XML</SVEXPORTFORMAT></STATICVARIABLES></DESC></BODY></ENVELOPE>";
 
     private static string BuildSalesImport(string companyName, IEnumerable<SalesInvoice> invoices)
     {
@@ -137,14 +156,41 @@ public sealed class TallyIntegrationService : ITallyIntegrationService
     {
         var messages = new List<XElement>();
         foreach (var p in parties) messages.Add(new XElement("TALLYMESSAGE", new XElement("LEDGER", new XAttribute("NAME", p.Name), new XAttribute("ACTION", "Create"), new XElement("NAME", p.Name), new XElement("PARENT", p.Type == PartyType.Vendor ? "Sundry Creditors" : "Sundry Debtors"), new XElement("ISBILLWISEON", "Yes"), new XElement("PARTYGSTIN", p.Gstin))));
-        foreach (var s in stock) messages.Add(new XElement("TALLYMESSAGE", new XElement("STOCKITEM", new XAttribute("NAME", s.Name), new XAttribute("ACTION", "Create"), new XElement("NAME", s.Name), new XElement("PARENT", s.Category), new XElement("BASEUNITS", s.Unit), new XElement("GSTAPPLICABLE", "Applicable"))));
+        foreach (var s in stock) messages.Add(new XElement("TALLYMESSAGE", new XElement("STOCKITEM", new XAttribute("NAME", s.Name), new XAttribute("ACTION", "Create"), new XElement("NAME", s.Name), new XElement("PARENT", string.IsNullOrWhiteSpace(s.Category) ? "Primary" : s.Category), new XElement("BASEUNITS", s.Unit), new XElement("GSTAPPLICABLE", "Applicable"), new XElement("GSTTYPEOFSUPPLY", "Goods"), new XElement("GSTDETAILS.LIST", new XElement("APPLICABLEFROM", DateTime.Today.ToString("yyyyMMdd")), new XElement("STATEWISEDETAILS.LIST", new XElement("STATENAME", "Any"), new XElement("RATEDETAILS.LIST", new XElement("GSTRATE", s.GstRate))))));
         return Envelope(companyName, messages);
     }
 
     private static string BuildDaybookRequest(string companyName, DateTime from, DateTime to) => $"<?xml version=\"1.0\" encoding=\"UTF-8\"?><ENVELOPE><HEADER><VERSION>1</VERSION><TALLYREQUEST>Export</TALLYREQUEST><TYPE>Data</TYPE><ID>Daybook</ID></HEADER><BODY><DESC><STATICVARIABLES><SVCURRENTCOMPANY>{Escape(companyName)}</SVCURRENTCOMPANY><SVFROMDATE>{from:yyyyMMdd}</SVFROMDATE><SVTODATE>{to:yyyyMMdd}</SVTODATE><SVEXPORTFORMAT>$$SysName:XML</SVEXPORTFORMAT></STATICVARIABLES></DESC></BODY></ENVELOPE>";
     private static XElement Ledger(string name, bool positive, decimal amount) => new("ALLLEDGERENTRIES.LIST", new XElement("LEDGERNAME", name), new XElement("ISDEEMEDPOSITIVE", positive ? "YES" : "NO"), new XElement("AMOUNT", amount));
     private static string Envelope(string companyName, IEnumerable<XElement> messages) => new XDocument(new XElement("ENVELOPE", new XElement("HEADER", new XElement("TALLYREQUEST", "Import Data")), new XElement("BODY", new XElement("IMPORTDATA", new XElement("REQUESTDESC", new XElement("REPORTNAME", "Vouchers"), new XElement("STATICVARIABLES", new XElement("SVCURRENTCOMPANY", companyName))), new XElement("REQUESTDATA", messages))))).ToString();
+
     private static List<string> ExtractCompanyNames(string xml) { try { return XDocument.Parse(xml).Descendants("COMPANY").Select(x => (string?)x.Attribute("NAME") ?? x.Value).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.OrdinalIgnoreCase).ToList(); } catch { return new List<string>(); } }
     private static int ExtractNumber(string xml, string element) { try { return int.TryParse(XDocument.Parse(xml).Descendants(element).FirstOrDefault()?.Value, out var n) ? n : 0; } catch { return 0; } }
+
+    private static List<TallyLedgerDto> ParseLedgers(string xml)
+    {
+        try { return XDocument.Parse(xml).Descendants("LEDGER").Select(x => new TallyLedgerDto(Text(x, "NAME"), Text(x, "PARENT"), Text(x, "PARTYGSTIN") ?? Text(x, "GSTIN"), Decimal(x, "CLOSINGBALANCE"))).Where(x => !string.IsNullOrWhiteSpace(x.Name)).GroupBy(x => x.Name, StringComparer.OrdinalIgnoreCase).Select(g => g.First()).ToList(); }
+        catch { return new(); }
+    }
+
+    private static List<TallyStockItemDto> ParseStockItems(string xml)
+    {
+        try { return XDocument.Parse(xml).Descendants("STOCKITEM").Select(x => new TallyStockItemDto(Text(x, "NAME"), Text(x, "HSNDETAILS") ?? Text(x, "HSN"), Text(x, "BASEUNITS"), Decimal(x, "CLOSINGBALANCE"))).Where(x => !string.IsNullOrWhiteSpace(x.Name)).GroupBy(x => x.Name, StringComparer.OrdinalIgnoreCase).Select(g => g.First()).ToList(); }
+        catch { return new(); }
+    }
+
+    private static List<TallyVoucherDto> ParseVouchers(string xml)
+    {
+        try
+        {
+            return XDocument.Parse(xml).Descendants("VOUCHER").Select(x => new TallyVoucherDto(Text(x, "VOUCHERTYPENAME") ?? "Unknown", Text(x, "VOUCHERNUMBER") ?? "", ParseDate(Text(x, "DATE")), Text(x, "PARTYLEDGERNAME") ?? Text(x, "PARTYNAME"), Text(x, "REFERENCE") ?? Text(x, "REFERENCE"), Math.Abs(Decimal(x, "AMOUNT") ?? SumLedgerAmounts(x)))).Where(x => !string.IsNullOrWhiteSpace(x.VoucherNumber)).ToList();
+        }
+        catch { return new(); }
+    }
+
+    private static decimal SumLedgerAmounts(XElement x) => x.Descendants("LEDGERENTRIES.LIST").Select(e => Math.Abs(Decimal(e, "AMOUNT") ?? 0)).Sum();
+    private static string? Text(XElement e, string name) => e.Descendants(name).Select(x => x.Value.Trim()).FirstOrDefault(v => v.Length > 0);
+    private static decimal? Decimal(XElement e, string name) => System.Decimal.TryParse(Text(e, name), out var value) ? value : null;
+    private static DateTime? ParseDate(string? value) => DateTime.TryParseExact(value, "yyyyMMdd", null, System.Globalization.DateTimeStyles.None, out var d) ? d : null;
     private static string Escape(string value) => System.Security.SecurityElement.Escape(value) ?? string.Empty;
 }
