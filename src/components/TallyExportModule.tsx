@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import type { SalesInvoice, PurchaseInvoice } from '../types/tax';
 import { downloadTallySalesXml, downloadTallyExcelTemplate } from '../utils/tallyExporter';
-import { fetchTallyCompanies, pullTallyDaybook, syncTally, testTallyConnection } from '../services/api';
-import { FileSpreadsheet, Download, CheckCircle2, Code, Wifi, RefreshCw, Upload, Database, ArrowDownToLine, AlertCircle } from 'lucide-react';
+import { applyTallyMasters, fetchTallyCompanies, pullTallyDaybook, syncTally, testTallyConnection } from '../services/api';
+import { FileSpreadsheet, Download, CheckCircle2, Code, Wifi, RefreshCw, Upload, Database, ArrowDownToLine, AlertCircle, ShieldCheck } from 'lucide-react';
 
 interface TallyExportModuleProps {
   salesInvoices: SalesInvoice[];
@@ -16,6 +16,7 @@ export const TallyExportModule: React.FC<TallyExportModuleProps> = ({ salesInvoi
   const [connected, setConnected] = useState(false);
   const [busy, setBusy] = useState(false);
   const [lastResponse, setLastResponse] = useState('');
+  const [applyPreview, setApplyPreview] = useState<{ companyName: string; existingParties: number; newParties: number; existingStockItems: number; newStockItems: number; items: { entityType: string; tallyName: string; action: string; matchType: string; score: number; gstin?: string }[] } | null>(null);
 
   const run = async (work: () => Promise<void>) => {
     setBusy(true);
@@ -55,6 +56,19 @@ export const TallyExportModule: React.FC<TallyExportModuleProps> = ({ salesInvoi
     setLastResponse(result.result.rawResponse ?? '');
   });
 
+  const previewApply = () => run(async () => {
+    const result = await applyTallyMasters(baseUrl, companyName, false) as typeof applyPreview;
+    setApplyPreview(result);
+    setStatus(`Preview ready: ${result.newParties} new parties and ${result.newStockItems} new stock items.`);
+  });
+
+  const confirmApply = () => run(async () => {
+    const result = await applyTallyMasters(baseUrl, companyName, true) as { success: boolean; companyName: string; partiesCreated: number; stockItemsCreated: number; skipped: number; errors: string[] };
+    setApplyPreview(null);
+    setStatus(result.success ? `Applied ${result.partiesCreated} parties and ${result.stockItemsCreated} stock items; ${result.skipped} existing records skipped.` : `Apply completed with ${result.errors.length} error(s).`);
+    setLastResponse(result.errors.join('\n'));
+  });
+
   return (
     <div className="space-y-6 animate-fadeIn">
       <div className="bg-gradient-to-r from-blue-700 via-indigo-700 to-cyan-700 p-6 rounded-2xl border border-blue-600 shadow-md text-white">
@@ -79,9 +93,12 @@ export const TallyExportModule: React.FC<TallyExportModuleProps> = ({ salesInvoi
         <div className="mt-3 text-xs text-blue-100 flex items-center gap-2"><span className="font-semibold">Status:</span> {busy ? 'Working…' : status}</div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <button disabled={busy || !companyName} onClick={() => push('masters')} className="text-left bg-white border border-slate-200 rounded-2xl p-5 shadow-md hover:border-blue-400 disabled:opacity-50">
           <Upload className="w-5 h-5 text-blue-600 mb-3" /><div className="font-bold text-sm">Push Masters</div><p className="text-xs text-slate-500 mt-1">Customers, vendors and stock items.</p>
+        </button>
+        <button disabled={busy || !companyName} onClick={previewApply} className="text-left bg-white border border-emerald-200 rounded-2xl p-5 shadow-md hover:border-emerald-400 disabled:opacity-50">
+          <ShieldCheck className="w-5 h-5 text-emerald-600 mb-3" /><div className="font-bold text-sm">Preview Tally → TaxFlow</div><p className="text-xs text-slate-500 mt-1">Review new masters before writing them locally.</p>
         </button>
         <button disabled={busy || !companyName} onClick={() => push('sales')} className="text-left bg-white border border-slate-200 rounded-2xl p-5 shadow-md hover:border-blue-400 disabled:opacity-50">
           <CheckCircle2 className="w-5 h-5 text-emerald-600 mb-3" /><div className="font-bold text-sm">Push Sales</div><p className="text-xs text-slate-500 mt-1">Send sales vouchers with GST and inventory lines.</p>
@@ -93,6 +110,18 @@ export const TallyExportModule: React.FC<TallyExportModuleProps> = ({ salesInvoi
           <ArrowDownToLine className="w-5 h-5 text-purple-600 mb-3" /><div className="font-bold text-sm">Pull Daybook</div><p className="text-xs text-slate-500 mt-1">Read the last 30 days from Tally for reconciliation.</p>
         </button>
       </div>
+
+      {applyPreview && (
+        <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-5 shadow-md space-y-4">
+          <div className="flex items-center justify-between gap-4">
+            <div><div className="font-bold text-emerald-950">Tally → TaxFlow master preview</div><div className="text-xs text-emerald-800 mt-1">{applyPreview.newParties} new parties · {applyPreview.newStockItems} new stock items · {applyPreview.existingParties + applyPreview.existingStockItems} existing matches</div></div>
+            <button disabled={busy} onClick={confirmApply} className="px-4 py-2 rounded-lg bg-emerald-700 text-white text-xs font-bold disabled:opacity-50">Confirm & Apply</button>
+          </div>
+          <div className="max-h-56 overflow-auto rounded-xl bg-white border border-emerald-100">
+            {applyPreview.items.length === 0 ? <div className="p-4 text-xs text-slate-500">No master changes are required.</div> : applyPreview.items.map((item, index) => <div key={`${item.entityType}-${item.tallyName}-${index}`} className="px-4 py-2 border-b border-slate-100 last:border-0 flex items-center justify-between gap-4 text-xs"><span className="font-semibold text-slate-800">{item.entityType}: {item.tallyName}</span><span className="text-slate-500">{item.action} · {item.matchType} · {item.score.toFixed(2)}</span></div>)}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-md space-y-3">
