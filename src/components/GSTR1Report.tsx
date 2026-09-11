@@ -3,120 +3,12 @@ import type { SalesInvoice } from '../types/tax';
 import { downloadGstr1Json, downloadGstr1Excel } from '../utils/gstr1Exporter';
 import { formatCurrency } from '../utils/gst';
 import { FileCheck, Download, FileSpreadsheet } from 'lucide-react';
-
-interface GSTR1ReportProps {
-  salesInvoices: SalesInvoice[];
-}
-
+interface GSTR1ReportProps { salesInvoices: SalesInvoice[]; }
 export const GSTR1Report: React.FC<GSTR1ReportProps> = ({ salesInvoices }) => {
-  const totalTaxable = salesInvoices.reduce((acc, inv) => acc + inv.subtotal, 0);
-  const totalCgst = salesInvoices.reduce((acc, inv) => acc + inv.cgstTotal, 0);
-  const totalSgst = salesInvoices.reduce((acc, inv) => acc + inv.sgstTotal, 0);
-  const totalIgst = salesInvoices.reduce((acc, inv) => acc + inv.igstTotal, 0);
-  const totalTax = totalCgst + totalSgst + totalIgst;
-
-  return (
-    <div className="space-y-6 animate-fadeIn">
-      {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-md">
-        <div>
-          <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <FileCheck className="w-6 h-6 text-emerald-600" />
-            Ready-to-File GSTR-1 Compliance Reports Hub
-          </h2>
-          <p className="text-xs text-slate-500 mt-1">
-            Auto-compiles Tables 4A B2B, 5 B2CL, 7 B2CS, 12 HSN Summary &amp; 13 Document Summary. Download official JSON or Excel.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => downloadGstr1Excel(salesInvoices)}
-            className="flex items-center gap-2 text-xs font-bold px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-all cursor-pointer"
-          >
-            <FileSpreadsheet className="w-4 h-4 text-emerald-600" /> Download GSTR-1 Excel Sheet
-          </button>
-
-          <button
-            onClick={() => downloadGstr1Json(salesInvoices, '08', '2026')}
-            className="flex items-center gap-2 text-xs font-bold px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/20 transition-all cursor-pointer"
-          >
-            <Download className="w-4 h-4" /> Download GSTN Portal JSON Payload
-          </button>
-        </div>
-      </div>
-
-      {/* Summary KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-1">
-          <span className="text-slate-500 font-bold uppercase tracking-wider block">Total Outward Taxable</span>
-          <span className="text-xl font-black text-slate-900">{formatCurrency(totalTaxable)}</span>
-        </div>
-
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-1">
-          <span className="text-slate-500 font-bold uppercase tracking-wider block">CGST (9%) Output</span>
-          <span className="text-xl font-black text-blue-700">{formatCurrency(totalCgst)}</span>
-        </div>
-
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-1">
-          <span className="text-slate-500 font-bold uppercase tracking-wider block">SGST (9%) Output</span>
-          <span className="text-xl font-black text-blue-700">{formatCurrency(totalSgst)}</span>
-        </div>
-
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-1">
-          <span className="text-slate-500 font-bold uppercase tracking-wider block">Total Output Tax Due</span>
-          <span className="text-xl font-black text-purple-700">{formatCurrency(totalTax)}</span>
-        </div>
-      </div>
-
-      {/* Table 4A: B2B Invoices Breakdown */}
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-md overflow-hidden">
-        <div className="p-4 border-b border-slate-100 flex items-center justify-between">
-          <span className="text-xs font-bold text-slate-800">
-            Table 4A - B2B Invoices ({salesInvoices.length} Documents)
-          </span>
-          <span className="text-xs font-bold px-2.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
-            ✓ Ready for GST Portal Upload
-          </span>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-700">
-            <thead className="bg-slate-50 text-slate-500 uppercase text-[10px] tracking-wider font-bold border-b border-slate-200">
-              <tr>
-                <th className="p-3">GSTIN of Recipient</th>
-                <th className="p-3">Receiver Name</th>
-                <th className="p-3">Invoice #</th>
-                <th className="p-3">Invoice Date</th>
-                <th className="p-3">Invoice Value</th>
-                <th className="p-3">Place of Supply</th>
-                <th className="p-3">Taxable Value</th>
-                <th className="p-3">Cess</th>
-                <th className="p-3 text-right">Supply Type</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {salesInvoices.map((inv) => (
-                <tr key={inv.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="p-3 font-mono font-bold text-slate-900">{inv.partyGstin}</td>
-                  <td className="p-3 font-semibold text-slate-900">{inv.partyName}</td>
-                  <td className="p-3 font-mono text-blue-700 font-bold">{inv.invoiceNumber}</td>
-                  <td className="p-3 font-mono text-slate-500">{inv.date}</td>
-                  <td className="p-3 font-black text-slate-900">{formatCurrency(inv.grandTotal)}</td>
-                  <td className="p-3 font-mono text-slate-600">{inv.placeOfSupply}</td>
-                  <td className="p-3 font-semibold text-slate-800">{formatCurrency(inv.subtotal)}</td>
-                  <td className="p-3 text-slate-400 font-mono">0.00</td>
-                  <td className="p-3 text-right">
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100">
-                      {inv.partyStateCode === '24' ? 'INTRA-STATE' : 'INTER-STATE'}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  );
+  const totalTaxable=salesInvoices.reduce((a,i)=>a+i.subtotal,0), totalCgst=salesInvoices.reduce((a,i)=>a+i.cgstTotal,0), totalSgst=salesInvoices.reduce((a,i)=>a+i.sgstTotal,0), totalIgst=salesInvoices.reduce((a,i)=>a+i.igstTotal,0), totalTax=totalCgst+totalSgst+totalIgst;
+  return <div className="space-y-6 animate-fadeIn">
+    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-md"><div className="min-w-0"><h2 className="text-lg sm:text-xl font-bold text-slate-900 flex items-start gap-2"><FileCheck className="w-6 h-6 text-emerald-600 shrink-0"/><span>Ready-to-File GSTR-1 Compliance Reports Hub</span></h2><p className="text-xs text-slate-500 mt-1">Auto-compiles B2B, B2CL, B2CS, HSN and document summaries. Download JSON or Excel.</p></div><div className="grid grid-cols-1 sm:grid-cols-2 lg:flex gap-2"><button onClick={()=>downloadGstr1Excel(salesInvoices)} className="min-h-11 flex items-center justify-center gap-2 text-xs font-bold px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 border border-slate-200"><FileSpreadsheet className="w-4 h-4 text-emerald-600"/> GSTR-1 Excel</button><button onClick={()=>downloadGstr1Json(salesInvoices,'08','2026')} className="min-h-11 flex items-center justify-center gap-2 text-xs font-bold px-4 py-2.5 rounded-xl bg-emerald-600 text-white"><Download className="w-4 h-4"/> Portal JSON</button></div></div>
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 text-xs">{[['Total Outward Taxable',totalTaxable,'text-slate-900'],['CGST Output',totalCgst,'text-blue-700'],['SGST Output',totalSgst,'text-blue-700'],['Total Output Tax',totalTax,'text-purple-700']].map(([label,value,cls])=><div key={String(label)} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm"><span className="text-[10px] text-slate-500 font-bold uppercase block">{label}</span><span className={`text-base sm:text-xl font-black ${cls}`}>{formatCurrency(Number(value))}</span></div>)}</div>
+    <div className="bg-white border border-slate-200 rounded-2xl shadow-md overflow-hidden"><div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2"><span className="text-xs font-bold">Table 4A - B2B Invoices ({salesInvoices.length} Documents)</span><span className="w-fit text-[10px] font-bold px-2.5 py-1 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">✓ Ready for GST Portal</span></div><div className="hidden md:block overflow-x-auto"><table className="w-full text-left text-xs"><thead className="bg-slate-50 text-slate-500 uppercase text-[10px] font-bold"><tr><th className="p-3">GSTIN</th><th className="p-3">Receiver</th><th className="p-3">Invoice #</th><th className="p-3">Date</th><th className="p-3">Value</th><th className="p-3">Place</th><th className="p-3">Taxable</th><th className="p-3">Cess</th><th className="p-3">Supply</th></tr></thead><tbody className="divide-y divide-slate-100">{salesInvoices.map(inv=><tr key={inv.id}><td className="p-3 font-mono font-bold">{inv.partyGstin}</td><td className="p-3 font-semibold">{inv.partyName}</td><td className="p-3 font-mono text-blue-700 font-bold">{inv.invoiceNumber}</td><td className="p-3 font-mono">{inv.date}</td><td className="p-3 font-black">{formatCurrency(inv.grandTotal)}</td><td className="p-3">{inv.placeOfSupply}</td><td className="p-3">{formatCurrency(inv.subtotal)}</td><td className="p-3">0.00</td><td className="p-3"><span className="px-2 py-1 rounded text-[10px] font-bold bg-blue-50 text-blue-700">{inv.partyStateCode==='24'?'INTRA-STATE':'INTER-STATE'}</span></td></tr>)}</tbody></table></div><div className="md:hidden divide-y divide-slate-100">{salesInvoices.map(inv=><article key={inv.id} className="p-4 space-y-3"><div className="flex items-start justify-between gap-3"><div className="min-w-0"><div className="text-[10px] uppercase text-slate-400 font-bold">Recipient GSTIN</div><div className="font-mono font-bold text-xs break-all">{inv.partyGstin}</div><div className="font-semibold text-sm mt-1 break-words">{inv.partyName}</div></div><div className="text-right shrink-0"><div className="text-base font-black">{formatCurrency(inv.grandTotal)}</div><span className="text-[9px] px-2 py-1 rounded bg-blue-50 text-blue-700 font-bold">{inv.partyStateCode==='24'?'INTRA':'INTER'}</span></div></div><div className="grid grid-cols-2 gap-2 text-xs"><div className="bg-slate-50 p-3 rounded-xl"><span className="text-[10px] text-slate-400 block">Invoice</span><span className="font-mono font-bold break-all">{inv.invoiceNumber}</span></div><div className="bg-slate-50 p-3 rounded-xl"><span className="text-[10px] text-slate-400 block">Date</span><span className="font-mono">{inv.date}</span></div><div className="bg-slate-50 p-3 rounded-xl"><span className="text-[10px] text-slate-400 block">Taxable</span><span className="font-semibold">{formatCurrency(inv.subtotal)}</span></div><div className="bg-slate-50 p-3 rounded-xl"><span className="text-[10px] text-slate-400 block">Place</span><span className="font-semibold break-words">{inv.placeOfSupply}</span></div></div></article>)}</div></div>
+  </div>;
 };
