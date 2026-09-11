@@ -27,7 +27,7 @@ export const PartyMasterManager: React.FC<PartyMasterManagerProps> = ({ isOpen, 
   if (!isOpen) return null;
 
   const persist = (next: Party[]) => { setParties(next); localStorage.setItem('taxflow_parties', JSON.stringify(next)); };
-  const startCreate = () => { setEditingId(null); setForm(emptyForm); setFormOpen(true); };
+  const startCreate = (type: PartyType = 'CUSTOMER') => { setEditingId(null); setForm({ ...emptyForm, type }); setFormOpen(true); };
   const startEdit = (party: Party) => { setEditingId(party.id); setForm({ name: party.name, gstin: party.gstin, phone: party.phone, email: party.email, address: party.address, city: party.city, state: party.state, stateCode: party.stateCode, type: party.type, openingBalance: party.openingBalance }); setFormOpen(true); };
   const clearForm = () => { setEditingId(null); setForm(emptyForm); setFormOpen(false); };
 
@@ -55,10 +55,12 @@ export const PartyMasterManager: React.FC<PartyMasterManagerProps> = ({ isOpen, 
           <button type="button" onClick={onClose} className="h-10 w-10 shrink-0 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center" aria-label="Close"><X className="w-5 h-5" /></button>
         </div>
         <div className="p-3 sm:p-5 overflow-y-auto min-h-0">
-          <div className="flex flex-col lg:flex-row gap-3 mb-4">
+          <div className="flex flex-col lg:flex-row gap-2 mb-4">
             <div className="relative flex-1"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search name, GSTIN, phone, city..." className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm outline-none focus:border-blue-500" /></div>
             <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value as 'ALL' | PartyType)} className="rounded-xl border border-slate-200 px-3 py-2.5 text-sm bg-white"><option value="ALL">All parties</option><option value="CUSTOMER">Customers</option><option value="VENDOR">Vendors</option><option value="BOTH">Customer + Vendor</option></select>
-            <button type="button" onClick={startCreate} className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 text-white px-4 py-2.5 text-sm font-bold hover:bg-blue-700"><Plus className="w-4 h-4" /> Add Party</button>
+            <button type="button" onClick={() => startCreate('CUSTOMER')} className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 text-white px-4 py-2.5 text-sm font-bold hover:bg-blue-700"><Plus className="w-4 h-4" /> Add Customer</button>
+            <button type="button" onClick={() => startCreate('VENDOR')} className="inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 text-white px-4 py-2.5 text-sm font-bold hover:bg-amber-600"><Plus className="w-4 h-4" /> Add Vendor</button>
+            <button type="button" onClick={() => startCreate('BOTH')} className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-800 text-white px-4 py-2.5 text-sm font-bold hover:bg-slate-900"><Plus className="w-4 h-4" /> Both</button>
           </div>
           <div className="grid grid-cols-3 gap-2 mb-4">
             <div className="rounded-xl bg-blue-50 border border-blue-100 p-3"><div className="text-[10px] uppercase font-bold text-blue-600">Customers</div><div className="text-lg font-bold">{parties.filter((p) => p.type === 'CUSTOMER' || p.type === 'BOTH').length}</div></div>
@@ -67,7 +69,7 @@ export const PartyMasterManager: React.FC<PartyMasterManagerProps> = ({ isOpen, 
           </div>
           {formOpen && (
             <form onSubmit={save} className="mb-5 rounded-2xl border border-blue-200 bg-blue-50/40 p-3 sm:p-4">
-              <div className="flex items-center justify-between mb-3"><h3 className="font-bold text-sm text-slate-900">{editingId ? 'Edit Party' : 'New Party'}</h3><button type="button" onClick={clearForm} className="text-xs font-semibold text-slate-500">Clear</button></div>
+              <div className="flex items-center justify-between mb-3"><h3 className="font-bold text-sm text-slate-900">{editingId ? 'Edit Party' : `New ${form.type === 'BOTH' ? 'Customer + Vendor' : form.type === 'VENDOR' ? 'Vendor' : 'Customer'}`}</h3><button type="button" onClick={clearForm} className="text-xs font-semibold text-slate-500">Clear</button></div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 <input required value={form.name} onChange={(e) => setField('name', e.target.value)} placeholder="Party name *" className="rounded-lg border border-slate-200 px-3 py-2.5 text-sm" />
                 <input value={form.gstin} onChange={(e) => setField('gstin', e.target.value)} placeholder="GSTIN" className="rounded-lg border border-slate-200 px-3 py-2.5 text-sm uppercase" />
@@ -79,7 +81,7 @@ export const PartyMasterManager: React.FC<PartyMasterManagerProps> = ({ isOpen, 
                 <input value={form.state} onChange={(e) => setField('state', e.target.value)} placeholder="State" className="rounded-lg border border-slate-200 px-3 py-2.5 text-sm" />
                 <input value={form.stateCode} onChange={(e) => setField('stateCode', e.target.value)} placeholder="State code" className="rounded-lg border border-slate-200 px-3 py-2.5 text-sm" />
                 <input type="number" step="0.01" value={form.openingBalance} onChange={(e) => setField('openingBalance', Number(e.target.value))} placeholder="Opening balance" className="rounded-lg border border-slate-200 px-3 py-2.5 text-sm" />
-                <div className="sm:col-span-2 lg:col-span-2 flex gap-2"><button type="submit" className="flex-1 rounded-lg bg-emerald-600 text-white px-4 py-2.5 text-sm font-bold">{editingId ? 'Update Party' : 'Create Party'}</button><button type="button" onClick={clearForm} className="rounded-lg bg-white border border-slate-200 px-4 py-2.5 text-sm font-semibold">Cancel</button></div>
+                <div className="sm:col-span-2 lg:col-span-2 flex gap-2"><button type="submit" className="flex-1 rounded-lg bg-emerald-600 text-white px-4 py-2.5 text-sm font-bold">{editingId ? 'Update Party' : `Create ${form.type === 'BOTH' ? 'Customer + Vendor' : form.type === 'VENDOR' ? 'Vendor' : 'Customer'}`}</button><button type="button" onClick={clearForm} className="rounded-lg bg-white border border-slate-200 px-4 py-2.5 text-sm font-semibold">Cancel</button></div>
               </div>
             </form>
           )}
