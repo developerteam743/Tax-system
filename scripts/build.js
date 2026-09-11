@@ -36,6 +36,7 @@ const filesToBundle = [
   'services/api.ts',
   'components/Navbar.tsx',
   'components/Sidebar.tsx',
+  'components/PartyMasterManager.tsx',
   'components/MISDashboard.tsx',
   'components/SalesBilling.tsx',
   'components/EWayBillModule.tsx',
