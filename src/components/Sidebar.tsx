@@ -15,6 +15,11 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, unpostedOcrCount = 0, unreconciledBankCount = 0, lowStockCount = 0, isMobile = false }) => {
   const [showPartyManager, setShowPartyManager] = useState(false);
+  const openPartyMaster = () => {
+    setActiveTab('PARTIES_MASTER');
+    setShowPartyManager(true);
+  };
+
   const menuItems = [
     ['MIS_DASHBOARD', 'Executive MIS', LayoutDashboard, null, 'Business overview'],
     ['SALES_BILLING', 'Sales Invoicing', Receipt, null, 'GST billing & receipts'],
@@ -36,7 +41,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, unpos
           {menuItems.map(([id, label, Icon, badge, subtitle]) => (
             <div key={id} className="flex items-stretch gap-1">
               <button
-                onClick={() => setActiveTab(id)}
+                onClick={() => id === 'PARTIES_MASTER' ? openPartyMaster() : setActiveTab(id)}
                 className={`min-w-0 flex-1 flex items-center justify-between p-2.5 rounded-xl text-left ${activeTab === id ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md font-semibold' : 'text-slate-700 hover:bg-slate-100'}`}
               >
                 <div className="flex items-center gap-3 min-w-0">
@@ -48,7 +53,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, unpos
               {id === 'PARTIES_MASTER' && (
                 <button
                   type="button"
-                  onClick={() => setShowPartyManager(true)}
+                  onClick={openPartyMaster}
                   className="shrink-0 h-auto min-h-[44px] w-16 rounded-xl border-2 border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 hover:border-blue-400 flex flex-col items-center justify-center gap-0.5 font-bold"
                   title="Create, edit or delete customers and vendors"
                   aria-label="Manage customers and vendors"
@@ -78,10 +83,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, unpos
           <div className="grid grid-cols-4 gap-0.5 border-t border-slate-100 mt-1 pt-1">
             {menuItems.slice(5).map(([id, label, Icon, badge], i) => (
               <div key={id} className="relative min-w-0">
-                <button onClick={() => setActiveTab(id)} aria-label={label} className={`w-full flex items-center justify-center gap-1 min-h-9 px-1 rounded-lg text-[9px] font-bold ${activeTab === id ? 'text-blue-700 bg-blue-50' : 'text-slate-500'}`}>
+                <button onClick={() => id === 'PARTIES_MASTER' ? openPartyMaster() : setActiveTab(id)} aria-label={label} className={`w-full flex items-center justify-center gap-1 min-h-9 px-1 rounded-lg text-[9px] font-bold ${activeTab === id ? 'text-blue-700 bg-blue-50' : 'text-slate-500'}`}>
                   <Icon className="w-3.5 h-3.5 shrink-0" /><span className="truncate">{short[i + 5]}</span>{badge !== null && badge > 0 && <span className="text-[8px] rounded-full bg-red-500 text-white px-1">{badge}</span>}
                 </button>
-                {id === 'PARTIES_MASTER' && <button type="button" onClick={() => setShowPartyManager(true)} className="absolute right-0 top-0.5 h-8 w-8 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-sm" aria-label="Manage customers and vendors"><Settings className="w-3.5 h-3.5" /></button>}
+                {id === 'PARTIES_MASTER' && <button type="button" onClick={openPartyMaster} className="absolute right-0 top-0.5 h-8 w-8 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-sm" aria-label="Manage customers and vendors"><Settings className="w-3.5 h-3.5" /></button>}
               </div>
             ))}
           </div>
