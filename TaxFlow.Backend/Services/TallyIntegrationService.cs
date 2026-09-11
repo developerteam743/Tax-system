@@ -153,7 +153,10 @@ public sealed class TallyIntegrationService : ITallyIntegrationService
     {
         var messages = new List<XElement>();
         foreach (var p in parties) messages.Add(new XElement("TALLYMESSAGE", new XElement("LEDGER", new XAttribute("NAME", p.Name), new XAttribute("ACTION", "Create"), new XElement("NAME", p.Name), new XElement("PARENT", p.Type == PartyType.Vendor ? "Sundry Creditors" : "Sundry Debtors"), new XElement("ISBILLWISEON", "Yes"), new XElement("PARTYGSTIN", p.Gstin))));
-        foreach (var s in stock) messages.Add(new XElement("TALLYMESSAGE", new XElement("STOCKITEM", new XAttribute("NAME", s.Name), new XAttribute("ACTION", "Create"), new XElement("NAME", s.Name), new XElement("PARENT", "Primary"), new XElement("BASEUNITS", s.Unit), new XElement("GSTAPPLICABLE", "Applicable"), new XElement("GSTTYPEOFSUPPLY", "Goods"), new XElement("GSTDETAILS.LIST", new XElement("APPLICABLEFROM", DateTime.Today.ToString("yyyyMMdd")), new XElement("STATEWISEDETAILS.LIST", new XElement("STATENAME", "Any"), new XElement("RATEDETAILS.LIST", new XElement("GSTRATE", s.GstRate))))));
+        foreach (var s in stock)
+        {
+            messages.Add(new XElement("TALLYMESSAGE", new XElement("STOCKITEM", new XAttribute("NAME", s.Name), new XAttribute("ACTION", "Create"), new XElement("NAME", s.Name), new XElement("PARENT", "Primary"), new XElement("BASEUNITS", s.Unit), new XElement("GSTAPPLICABLE", "Applicable"), new XElement("GSTTYPEOFSUPPLY", "Goods"), new XElement("GSTDETAILS.LIST", new XElement("APPLICABLEFROM", DateTime.Today.ToString("yyyyMMdd")), new XElement("STATEWISEDETAILS.LIST", new XElement("STATENAME", "Any"), new XElement("RATEDETAILS.LIST", new XElement("GSTRATE", s.GstRate))))));
+        }
         return Envelope(companyName, messages);
     }
 
