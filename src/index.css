@@ -13,8 +13,11 @@
   --base-font-size: clamp(13px, 0.25vw + 12px, 16px);
 }
 
-html {
+html,
+body,
+#root {
   min-width: 0;
+  max-width: 100%;
   overflow-x: hidden;
 }
 
@@ -26,9 +29,18 @@ body {
   margin: 0;
   padding: 0;
   min-height: 100vh;
-  min-width: 0;
-  overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
+}
+
+main {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+main > * {
+  min-width: 0;
+  max-width: 100%;
 }
 
 button,
@@ -36,9 +48,9 @@ input,
 select,
 textarea {
   max-width: 100%;
+  box-sizing: border-box;
 }
 
-/* Prevent long invoice numbers, GSTINs and imported text from forcing the page wider. */
 input,
 select,
 textarea,
@@ -61,20 +73,9 @@ th,
   -webkit-overflow-scrolling: touch;
 }
 
-@media (min-width: 768px) {
-  .printable-invoice {
-    margin: 2rem auto;
-    border: 1px solid var(--border-card);
-    border-radius: 0.75rem;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-  }
-}
-
-/* Keep dense accounting tables usable without shrinking text to unreadable sizes. */
-.table-scroll {
-  width: 100%;
+.table-scroll,
+.overflow-x-auto {
   max-width: 100%;
-  overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -82,7 +83,13 @@ th,
   min-width: 640px;
 }
 
-/* Touch targets and compact controls on phones. */
+@media (max-width: 1023px) {
+  /* Bottom navigation occupies two compact rows on phones/tablets. */
+  main {
+    padding-bottom: 7rem !important;
+  }
+}
+
 @media (max-width: 639px) {
   button,
   [role="button"] {
@@ -98,6 +105,15 @@ th,
   .printable-invoice {
     margin: 0.5rem 0;
     border-radius: 0;
+  }
+}
+
+@media (min-width: 768px) {
+  .printable-invoice {
+    margin: 2rem auto;
+    border: 1px solid var(--border-card);
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
   }
 }
 
