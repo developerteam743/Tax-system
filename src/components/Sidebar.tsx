@@ -49,11 +49,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, unpos
                 <button
                   type="button"
                   onClick={() => setShowPartyManager(true)}
-                  className="shrink-0 w-9 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 hover:bg-blue-50 hover:text-blue-700 flex items-center justify-center"
+                  className="shrink-0 h-auto min-h-[44px] w-16 rounded-xl border-2 border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 hover:border-blue-400 flex flex-col items-center justify-center gap-0.5 font-bold"
                   title="Create, edit or delete customers and vendors"
                   aria-label="Manage customers and vendors"
                 >
                   <Settings className="w-4 h-4" />
+                  <span className="text-[8px] uppercase leading-none">Manage</span>
                 </button>
               )}
             </div>
