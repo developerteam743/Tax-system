@@ -20,7 +20,6 @@ const dom = new JSDOM(html, {
 
 const errors = [];
 
-// Intercept browser window console and errors
 dom.window.console.error = (...args) => {
   errors.push(args.join(' '));
 };
@@ -29,12 +28,17 @@ dom.window.addEventListener('error', (event) => {
   errors.push(event.error ? event.error.stack : event.message);
 });
 
-const code = fs.readFileSync(bundlePath, 'utf-8');
+let code = fs.readFileSync(bundlePath, 'utf-8');
+
+// The production bundle is intentionally executable in a browser module context,
+// but this smoke test evaluates it as a classic script. Replace Vite's compile-time
+// import.meta.env reference so JSDOM can exercise the rendered application without
+// requiring module evaluation.
+code = code.replace(/import\.meta\.env/g, '({})');
 
 try {
   dom.window.eval(code);
 
-  // Wait a small tick for React's microtask scheduler (processRootScheduleInMicrotask) to flush
   setTimeout(() => {
     const rootEl = dom.window.document.getElementById('root');
     const renderedHtml = rootEl ? rootEl.innerHTML : '';
