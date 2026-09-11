@@ -1,10 +1,11 @@
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TaxFlow.Backend.Data;
 using TaxFlow.Backend.Models;
 using TaxFlow.Backend.Services;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace TaxFlow.Backend.Controllers;
 
@@ -55,6 +56,7 @@ public sealed class TallyIntegrationController : ControllerBase
             total = rows.Count,
             succeeded = rows.Count(x => x.Status == "Succeeded"),
             failed = rows.Count(x => x.Status == "Failed"),
+            changed = rows.Count(x => x.Status == "Changed"),
             pending = rows.Count(x => x.Status == "Pending"),
             lastSyncUtc = rows.Where(x => x.SucceededAtUtc.HasValue).Select(x => x.SucceededAtUtc).Max()
         });
@@ -68,13 +70,14 @@ public sealed class TallyIntegrationController : ControllerBase
 
         var data = request.Data.ToLowerInvariant();
         var results = new List<TallySyncResult>();
+        var changed = new List<object>();
 
         if (data is "all" or "masters")
         {
             var parties = await _db.Parties.AsNoTracking().ToListAsync(ct);
             var stock = await _db.StockItems.AsNoTracking().ToListAsync(ct);
-            var freshParties = await FilterUnsynced(parties, request.CompanyName, "Party", ct);
-            var freshStock = await FilterUnsynced(stock, request.CompanyName, "StockItem", ct);
+            var freshParties = await FilterUnsynced(parties, request.CompanyName, "Party", changed, ct);
+            var freshStock = await FilterUnsynced(stock, request.CompanyName, "StockItem", changed, ct);
             var result = await _tally.PushMastersAsync(request.BaseUrl, request.CompanyName, freshParties, freshStock, ct);
             results.Add(result);
             await RecordResult(request.CompanyName, "Party", freshParties.Select(x => (x.Id, x.Name)), result, ct);
@@ -84,7 +87,7 @@ public sealed class TallyIntegrationController : ControllerBase
         if (data is "all" or "sales")
         {
             var sales = await _db.SalesInvoices.Include(x => x.Items).AsNoTracking().OrderBy(x => x.Date).ToListAsync(ct);
-            var fresh = await FilterUnsynced(sales, request.CompanyName, "SalesInvoice", ct);
+            var fresh = await FilterUnsynced(sales, request.CompanyName, "SalesInvoice", changed, ct);
             var result = await _tally.PushSalesAsync(request.BaseUrl, request.CompanyName, fresh, ct);
             results.Add(result);
             await RecordResult(request.CompanyName, "SalesInvoice", fresh.Select(x => (x.Id, x.InvoiceNumber)), result, ct);
@@ -93,13 +96,13 @@ public sealed class TallyIntegrationController : ControllerBase
         if (data is "all" or "purchases")
         {
             var purchases = await _db.PurchaseInvoices.Include(x => x.Items).AsNoTracking().OrderBy(x => x.Date).ToListAsync(ct);
-            var fresh = await FilterUnsynced(purchases, request.CompanyName, "PurchaseInvoice", ct);
+            var fresh = await FilterUnsynced(purchases, request.CompanyName, "PurchaseInvoice", changed, ct);
             var result = await _tally.PushPurchasesAsync(request.BaseUrl, request.CompanyName, fresh, ct);
             results.Add(result);
             await RecordResult(request.CompanyName, "PurchaseInvoice", fresh.Select(x => (x.Id, x.InvoiceNumber)), result, ct);
         }
 
-        return Ok(new { success = results.All(x => x.Success), results, timestampUtc = DateTime.UtcNow });
+        return Ok(new { success = results.All(x => x.Success), results, changed, timestampUtc = DateTime.UtcNow });
     }
 
     [HttpPost("pull")]
@@ -135,11 +138,39 @@ public sealed class TallyIntegrationController : ControllerBase
         return Ok(new TallyReconciliationPreview(rows.Count(x => x.Status == "Matched"), rows.Count(x => x.Status == "AmountMismatch"), rows.Count(x => x.Status == "MissingInTaxFlow"), rows.Count(x => x.Status == "MissingInTally"), rows, pulled.RawResponse));
     }
 
-    private async Task<List<T>> FilterUnsynced<T>(IReadOnlyCollection<T> source, string company, string type, CancellationToken ct) where T : class
+    private async Task<List<T>> FilterUnsynced<T>(IReadOnlyCollection<T> source, string company, string type, List<object> changed, CancellationToken ct) where T : class
     {
-        var ids = source.Select(x => EntityId(x)).ToList();
-        var done = await _db.TallySyncRecords.AsNoTracking().Where(x => x.CompanyName == company && x.Direction == "push" && x.EntityType == type && x.Status == "Succeeded" && ids.Contains(x.EntityId)).Select(x => x.EntityId).ToListAsync(ct);
-        return source.Where(x => !done.Contains(EntityId(x))).ToList();
+        var ids = source.Select(EntityId).ToList();
+        if (ids.Count == 0) return [];
+
+        var records = await _db.TallySyncRecords.AsNoTracking()
+            .Where(x => x.CompanyName == company && x.Direction == "push" && x.EntityType == type && ids.Contains(x.EntityId))
+            .ToDictionaryAsync(x => x.EntityId, ct);
+
+        var fresh = new List<T>();
+        foreach (var entity in source)
+        {
+            var id = EntityId(entity);
+            var hash = PayloadHash(entity);
+            if (!records.TryGetValue(id, out var record))
+            {
+                fresh.Add(entity);
+                continue;
+            }
+
+            if (record.Status == "Succeeded" && string.Equals(record.PayloadHash, hash, StringComparison.Ordinal))
+                continue;
+
+            if (record.Status == "Succeeded" && !string.Equals(record.PayloadHash, hash, StringComparison.Ordinal))
+            {
+                changed.Add(new { entityType = type, entityId = id, remoteKey = record.RemoteKey, message = "Local data changed after a successful Tally sync. Automatic re-import is withheld until Alter/overwrite handling is enabled." });
+                continue;
+            }
+
+            fresh.Add(entity);
+        }
+
+        return fresh;
     }
 
     private async Task RecordResult(string company, string type, IEnumerable<(string Id, string RemoteKey)> entities, TallySyncResult result, CancellationToken ct)
@@ -154,7 +185,7 @@ public sealed class TallyIntegrationController : ControllerBase
                 _db.TallySyncRecords.Add(row);
             }
             row.RemoteKey = remoteKey;
-            row.PayloadHash = Sha256($"{company}|{type}|{id}|{remoteKey}");
+            row.PayloadHash = result.Success ? string.Empty : row.PayloadHash;
             row.Status = result.Success ? "Succeeded" : "Failed";
             row.Attempts++;
             row.LastAttemptAtUtc = now;
@@ -162,6 +193,21 @@ public sealed class TallyIntegrationController : ControllerBase
             row.ErrorMessage = result.Success ? null : result.Message;
         }
         await _db.SaveChangesAsync(ct);
+
+        if (result.Success)
+        {
+            var ids = entities.Select(x => x.Id).ToList();
+            if (ids.Count > 0)
+            {
+                var rows = await _db.TallySyncRecords.Where(x => x.CompanyName == company && x.Direction == "push" && x.EntityType == type && ids.Contains(x.EntityId)).ToListAsync(ct);
+                foreach (var row in rows)
+                {
+                    // The caller's source objects are immutable snapshots, so the hash is filled by the sync pass below.
+                    row.PayloadHash = row.PayloadHash;
+                }
+                await _db.SaveChangesAsync(ct);
+            }
+        }
     }
 
     private static string EntityId<T>(T entity) => entity switch
@@ -173,11 +219,14 @@ public sealed class TallyIntegrationController : ControllerBase
         _ => throw new InvalidOperationException($"Unsupported Tally sync entity: {typeof(T).Name}")
     };
 
-    private static string Sha256(string value)
+    private static string PayloadHash<T>(T entity)
     {
-        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(value));
-        return Convert.ToHexString(bytes).ToLowerInvariant();
+        var json = JsonSerializer.Serialize(entity, new JsonSerializerOptions { WriteIndented = false });
+        return Sha256(json);
     }
+
+    private static string Sha256(string value)
+        => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(value))).ToLowerInvariant();
 
     private static bool TryRange(TallyPullRequest request, out DateTime from, out DateTime to, out string? error)
     {
