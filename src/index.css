@@ -1,76 +1,19 @@
 @import "tailwindcss";
 
-:root {
-  --bg-main: #f8fafc;
-  --bg-card: #ffffff;
-  --border-card: #e2e8f0;
-  --text-main: #0f172a;
-  --text-muted: #64748b;
-  --accent-blue: #2563eb;
-  --accent-purple: #7c3aed;
-  --accent-emerald: #059669;
-  --invoice-padding: clamp(0.75rem, 2vw, 2.5rem);
-  --base-font-size: clamp(13px, 0.25vw + 12px, 16px);
-}
-
-html, body, #root { min-width: 0; max-width: 100%; overflow-x: hidden; }
-
-body {
-  background-color: var(--bg-main);
-  color: var(--text-main);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  font-size: var(--base-font-size);
-  margin: 0;
-  padding: 0;
-  min-height: 100vh;
-  -webkit-font-smoothing: antialiased;
-}
-
-main { min-width: 0; max-width: 100%; box-sizing: border-box; }
-main > * { min-width: 0; max-width: 100%; }
-button, input, select, textarea { max-width: 100%; box-sizing: border-box; }
-input, select, textarea, pre, td, th, .breakable { overflow-wrap: anywhere; word-break: break-word; }
-
-.printable-invoice {
-  width: min(100%, 850px);
-  max-width: 100%;
-  box-sizing: border-box;
-  margin: 0.75rem auto;
-  padding: var(--invoice-padding);
-  background-color: var(--bg-card);
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-.table-scroll, .overflow-x-auto { max-width: 100%; -webkit-overflow-scrolling: touch; }
-.table-scroll > table { min-width: 640px; }
-
-@media (max-width: 1023px) {
-  main { padding-bottom: 7rem !important; }
-}
-
-@media (max-width: 639px) {
-  button, [role="button"] { min-height: 40px; }
-  input, select, textarea { min-height: 40px; }
-  .printable-invoice { margin: 0.5rem 0; border-radius: 0; }
-}
-
-@media (min-width: 768px) {
-  .printable-invoice { margin: 2rem auto; border: 1px solid var(--border-card); border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1); }
-}
-
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: #f1f5f9; }
-::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-
-@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-.animate-fadeIn { animation: fadeIn 0.25s ease-out forwards; }
-
-@media print {
-  @page { margin: 0.5cm; }
-  body * { visibility: hidden; }
-  body { background-color: white; }
-  .printable-invoice, .printable-invoice * { visibility: visible; }
-  .printable-invoice { position: absolute; left: 0; top: 0; width: 100%; max-width: none; margin: 0; padding: 0; border: none; box-shadow: none; overflow: visible; }
-}
+:root { --bg-main:#f8fafc; --bg-card:#fff; --border-card:#e2e8f0; --text-main:#0f172a; --text-muted:#64748b; --accent-blue:#2563eb; --accent-purple:#7c3aed; --accent-emerald:#059669; --invoice-padding:clamp(.75rem,2vw,2.5rem); --base-font-size:clamp(13px,.25vw + 12px,16px); }
+html,body,#root { min-width:0; max-width:100%; overflow-x:hidden; }
+body { background-color:var(--bg-main); color:var(--text-main); font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif; font-size:var(--base-font-size); margin:0; padding:0; min-height:100vh; -webkit-font-smoothing:antialiased; }
+main { min-width:0; max-width:100%; box-sizing:border-box; }
+main > * { min-width:0; max-width:100%; }
+button,input,select,textarea { max-width:100%; box-sizing:border-box; }
+input,select,textarea,pre,td,th,.breakable { overflow-wrap:anywhere; word-break:break-word; }
+.printable-invoice { width:min(100%,850px); max-width:100%; box-sizing:border-box; margin:.75rem auto; padding:var(--invoice-padding); background-color:var(--bg-card); overflow-x:auto; -webkit-overflow-scrolling:touch; }
+.table-scroll,.overflow-x-auto { max-width:100%; -webkit-overflow-scrolling:touch; }
+.table-scroll > table { min-width:640px; }
+@media (max-width:1023px) { main { padding-bottom:calc(7rem + env(safe-area-inset-bottom)) !important; } }
+@media (max-width:639px) { button,[role="button"] { min-height:40px; } input,select,textarea { min-height:40px; } .printable-invoice { margin:.5rem 0; border-radius:0; } }
+@media (min-width:768px) { .printable-invoice { margin:2rem auto; border:1px solid var(--border-card); border-radius:.75rem; box-shadow:0 4px 6px -1px rgba(0,0,0,.1),0 2px 4px -2px rgba(0,0,0,.1); } }
+@supports (padding:max(0px)) { .pb-safe { padding-bottom:max(.5rem,env(safe-area-inset-bottom)); } }
+::-webkit-scrollbar { width:6px; height:6px; } ::-webkit-scrollbar-track { background:#f1f5f9; } ::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:4px; } ::-webkit-scrollbar-thumb:hover { background:#94a3b8; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } } .animate-fadeIn { animation:fadeIn .25s ease-out forwards; }
+@media print { @page { margin:.5cm; } body * { visibility:hidden; } body { background-color:#fff; } .printable-invoice,.printable-invoice * { visibility:visible; } .printable-invoice { position:absolute; left:0; top:0; width:100%; max-width:none; margin:0; padding:0; border:none; box-shadow:none; overflow:visible; } }
