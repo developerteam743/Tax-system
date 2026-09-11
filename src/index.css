@@ -41,6 +41,9 @@ img,svg,video,canvas { max-width:100%; }
 /* Fluid application gutters: desktop stays spacious, small screens stay compact. */
 main { padding-left:var(--app-gutter); padding-right:var(--app-gutter); }
 
+/* Flex workspaces must let the content pane shrink instead of preserving intrinsic width. */
+main { flex:1 1 0%; min-width:0; }
+
 /* Common flex/grid children must be allowed to shrink instead of creating page overflow. */
 .flex > *, .grid > * { min-width:0; }
 
@@ -71,6 +74,17 @@ table { max-width:100%; }
   -webkit-overflow-scrolling:touch;
 }
 
+/* Explicit responsive-navigation fallback. This prevents a desktop sidebar from
+   surviving in narrow/cropped environments when utility breakpoints are unavailable. */
+@media (max-width:1023px) {
+  aside { display:none !important; }
+  nav[aria-label="Mobile navigation"] { display:block !important; }
+}
+
+@media (min-width:1024px) {
+  nav[aria-label="Mobile navigation"] { display:none !important; }
+}
+
 @media (max-width:1279px) {
   :root { --app-gutter:clamp(.75rem,1.6vw,1.25rem); }
 }
@@ -93,12 +107,8 @@ table { max-width:100%; }
     -webkit-overflow-scrolling:touch;
     scrollbar-width:thin;
   }
-  main > .space-y-6 > div:has(> table) > table {
-    min-width:640px;
-  }
-  main > .space-y-6 > div:first-child {
-    align-items:flex-start;
-  }
+  main > .space-y-6 > div:has(> table) > table { min-width:640px; }
+  main > .space-y-6 > div:first-child { align-items:flex-start; }
 }
 
 @media (max-width:639px) {
