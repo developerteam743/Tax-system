@@ -202,7 +202,7 @@ public sealed class TallyIntegrationService : ITallyIntegrationService
     {
         try
         {
-            return XDocument.Parse(xml).Descendants("LEDGER").Select(x => new TallyLedgerDto(Text(x, "NAME"), Text(x, "PARENT"), Text(x, "PARTYGSTIN") ?? Text(x, "GSTIN"), Decimal(x, "CLOSINGBALANCE"))).Where(x => !string.IsNullOrWhiteSpace(x.Name)).GroupBy(x => x.Name, StringComparer.OrdinalIgnoreCase).Select(g => g.First()).ToList();
+            return XDocument.Parse(xml).Descendants("LEDGER").Select(x => new TallyLedgerDto(Text(x, "NAME") ?? string.Empty, Text(x, "PARENT"), Text(x, "PARTYGSTIN") ?? Text(x, "GSTIN"), Decimal(x, "CLOSINGBALANCE"))).Where(x => !string.IsNullOrWhiteSpace(x.Name)).GroupBy(x => x.Name, StringComparer.OrdinalIgnoreCase).Select(g => g.First()).ToList();
         }
         catch { return new List<TallyLedgerDto>(); }
     }
@@ -211,7 +211,7 @@ public sealed class TallyIntegrationService : ITallyIntegrationService
     {
         try
         {
-            return XDocument.Parse(xml).Descendants("STOCKITEM").Select(x => new TallyStockItemDto(Text(x, "NAME"), Text(x, "HSNDETAILS") ?? Text(x, "HSN"), Text(x, "BASEUNITS"), ParseQuantity(Text(x, "CLOSINGBALANCE")))).Where(x => !string.IsNullOrWhiteSpace(x.Name)).GroupBy(x => x.Name, StringComparer.OrdinalIgnoreCase).Select(g => g.First()).ToList();
+            return XDocument.Parse(xml).Descendants("STOCKITEM").Select(x => new TallyStockItemDto(Text(x, "NAME") ?? string.Empty, Text(x, "HSNDETAILS") ?? Text(x, "HSN"), Text(x, "BASEUNITS"), ParseQuantity(Text(x, "CLOSINGBALANCE")))).Where(x => !string.IsNullOrWhiteSpace(x.Name)).GroupBy(x => x.Name, StringComparer.OrdinalIgnoreCase).Select(g => g.First()).ToList();
         }
         catch { return new List<TallyStockItemDto>(); }
     }
@@ -223,7 +223,7 @@ public sealed class TallyIntegrationService : ITallyIntegrationService
             return XDocument.Parse(xml).Descendants("VOUCHER").Select(v =>
             {
                 var inventory = v.Descendants("ALLINVENTORYENTRIES.LIST").Select(x => new TallyVoucherLineDto(Text(x, "STOCKITEMNAME"), ParseQuantity(Text(x, "BILLEDQTY") ?? Text(x, "ACTUALQTY")), ExtractUnit(Text(x, "BILLEDQTY") ?? Text(x, "ACTUALQTY")), Decimal(x, "RATE") ?? 0m, Math.Abs(Decimal(x, "AMOUNT") ?? 0m), ExtractGstRate(x))).ToList();
-                var ledgers = v.Descendants("ALLLEDGERENTRIES.LIST").Select(x => new TallyLedgerLineDto(Text(x, "LEDGERNAME"), Math.Abs(Decimal(x, "AMOUNT") ?? 0m), string.Equals(Text(x, "ISDEEMEDPOSITIVE"), "YES", StringComparison.OrdinalIgnoreCase))).ToList();
+                var ledgers = v.Descendants("ALLLEDGERENTRIES.LIST").Select(x => new TallyLedgerLineDto(Text(x, "LEDGERNAME") ?? string.Empty, Math.Abs(Decimal(x, "AMOUNT") ?? 0m), string.Equals(Text(x, "ISDEEMEDPOSITIVE"), "YES", StringComparison.OrdinalIgnoreCase))).ToList();
                 return new TallyVoucherDto(Text(v, "VOUCHERTYPENAME") ?? "", Text(v, "VOUCHERNUMBER") ?? "", ParseDate(Text(v, "DATE")), Text(v, "PARTYLEDGERNAME"), Text(v, "REFERENCE"), Math.Abs(Decimal(v, "AMOUNT") ?? 0m), inventory, ledgers);
             }).Where(x => !string.IsNullOrWhiteSpace(x.VoucherNumber)).ToList();
         }
