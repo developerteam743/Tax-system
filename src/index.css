@@ -1,19 +1,129 @@
 @import "tailwindcss";
 
-:root { --bg-main:#f8fafc; --bg-card:#fff; --border-card:#e2e8f0; --text-main:#0f172a; --text-muted:#64748b; --accent-blue:#2563eb; --accent-purple:#7c3aed; --accent-emerald:#059669; --invoice-padding:clamp(.75rem,2vw,2.5rem); --base-font-size:clamp(13px,.25vw + 12px,16px); }
-html,body,#root { min-width:0; max-width:100%; overflow-x:hidden; }
-body { background-color:var(--bg-main); color:var(--text-main); font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif; font-size:var(--base-font-size); margin:0; padding:0; min-height:100vh; -webkit-font-smoothing:antialiased; }
-main { min-width:0; max-width:100%; box-sizing:border-box; }
+:root {
+  --bg-main:#f8fafc;
+  --bg-card:#fff;
+  --border-card:#e2e8f0;
+  --text-main:#0f172a;
+  --text-muted:#64748b;
+  --accent-blue:#2563eb;
+  --accent-purple:#7c3aed;
+  --accent-emerald:#059669;
+  --invoice-padding:clamp(.75rem,2vw,2.5rem);
+  --base-font-size:clamp(13px,.25vw + 12px,16px);
+  --app-gutter:clamp(.75rem,1.8vw,2rem);
+  --section-gap:clamp(.75rem,1.6vw,1.5rem);
+  --card-radius:clamp(.75rem,1vw,1rem);
+}
+
+* { box-sizing:border-box; }
+html,body,#root { min-width:0; max-width:100%; width:100%; overflow-x:hidden; }
+body {
+  background-color:var(--bg-main);
+  color:var(--text-main);
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif;
+  font-size:var(--base-font-size);
+  margin:0;
+  padding:0;
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+
+#root { min-height:100vh; }
+main { min-width:0; max-width:100%; width:100%; box-sizing:border-box; }
 main > * { min-width:0; max-width:100%; }
-button,input,select,textarea { max-width:100%; box-sizing:border-box; }
+section,article,form,fieldset { min-width:0; max-width:100%; }
+button,input,select,textarea { max-width:100%; box-sizing:border-box; font:inherit; }
 input,select,textarea,pre,td,th,.breakable { overflow-wrap:anywhere; word-break:break-word; }
-.printable-invoice { width:min(100%,850px); max-width:100%; box-sizing:border-box; margin:.75rem auto; padding:var(--invoice-padding); background-color:var(--bg-card); overflow-x:auto; -webkit-overflow-scrolling:touch; }
-.table-scroll,.overflow-x-auto { max-width:100%; -webkit-overflow-scrolling:touch; }
+img,svg,video,canvas { max-width:100%; }
+
+/* Fluid application gutters: desktop stays spacious, small screens stay compact. */
+main { padding-left:var(--app-gutter); padding-right:var(--app-gutter); }
+
+/* Common flex/grid children must be allowed to shrink instead of creating page overflow. */
+.flex > *, .grid > * { min-width:0; }
+
+/* Prevent long business identifiers from widening cards or action bars. */
+.font-mono { overflow-wrap:anywhere; word-break:break-word; }
+
+/* Wide accounting tables may scroll inside their own region, never the whole page. */
+.table-scroll,.overflow-x-auto { max-width:100%; width:100%; -webkit-overflow-scrolling:touch; scrollbar-width:thin; }
 .table-scroll > table { min-width:640px; }
-@media (max-width:1023px) { main { padding-bottom:calc(7rem + env(safe-area-inset-bottom)) !important; } }
-@media (max-width:639px) { button,[role="button"] { min-height:40px; } input,select,textarea { min-height:40px; } .printable-invoice { margin:.5rem 0; border-radius:0; } }
-@media (min-width:768px) { .printable-invoice { margin:2rem auto; border:1px solid var(--border-card); border-radius:.75rem; box-shadow:0 4px 6px -1px rgba(0,0,0,.1),0 2px 4px -2px rgba(0,0,0,.1); } }
-@supports (padding:max(0px)) { .pb-safe { padding-bottom:max(.5rem,env(safe-area-inset-bottom)); } }
-::-webkit-scrollbar { width:6px; height:6px; } ::-webkit-scrollbar-track { background:#f1f5f9; } ::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:4px; } ::-webkit-scrollbar-thumb:hover { background:#94a3b8; }
-@keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } } .animate-fadeIn { animation:fadeIn .25s ease-out forwards; }
-@media print { @page { margin:.5cm; } body * { visibility:hidden; } body { background-color:#fff; } .printable-invoice,.printable-invoice * { visibility:visible; } .printable-invoice { position:absolute; left:0; top:0; width:100%; max-width:none; margin:0; padding:0; border:none; box-shadow:none; overflow:visible; } }
+
+/* Responsive tables supplied by modules can opt into a denser desktop layout. */
+table { max-width:100%; }
+
+/* Generic action rows: wrap before they can force horizontal scrolling. */
+.action-row,.actions-row { display:flex; flex-wrap:wrap; align-items:center; gap:.5rem; min-width:0; }
+
+/* Keep overlays within the visual viewport. */
+.fixed.inset-0 { max-width:100vw; max-height:100dvh; }
+
+.printable-invoice {
+  width:min(100%,850px);
+  max-width:100%;
+  box-sizing:border-box;
+  margin:.75rem auto;
+  padding:var(--invoice-padding);
+  background-color:var(--bg-card);
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+}
+
+@media (max-width:1279px) {
+  :root { --app-gutter:clamp(.75rem,1.6vw,1.25rem); }
+}
+
+@media (max-width:1023px) {
+  :root { --section-gap:1rem; }
+  main { padding-bottom:calc(7rem + env(safe-area-inset-bottom)) !important; }
+}
+
+@media (max-width:767px) {
+  :root { --app-gutter:clamp(.75rem,3.5vw,1rem); }
+  main { padding-top:.25rem; }
+  .action-row,.actions-row { width:100%; }
+  .action-row > button,.actions-row > button { flex:1 1 auto; }
+  .table-scroll > table { min-width:620px; }
+}
+
+@media (max-width:639px) {
+  button,[role="button"] { min-height:40px; }
+  input,select,textarea { min-height:40px; }
+  .printable-invoice { margin:.5rem 0; border-radius:0; }
+}
+
+@media (max-width:374px) {
+  :root { --app-gutter:.625rem; }
+  button,[role="button"] { min-height:42px; }
+}
+
+@media (min-width:768px) {
+  .printable-invoice {
+    margin:2rem auto;
+    border:1px solid var(--border-card);
+    border-radius:.75rem;
+    box-shadow:0 4px 6px -1px rgba(0,0,0,.1),0 2px 4px -2px rgba(0,0,0,.1);
+  }
+}
+
+@supports (padding:max(0px)) {
+  .pb-safe { padding-bottom:max(.5rem,env(safe-area-inset-bottom)); }
+}
+
+::-webkit-scrollbar { width:6px; height:6px; }
+::-webkit-scrollbar-track { background:#f1f5f9; }
+::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:4px; }
+::-webkit-scrollbar-thumb:hover { background:#94a3b8; }
+
+@keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+.animate-fadeIn { animation:fadeIn .25s ease-out forwards; }
+
+@media print {
+  @page { margin:.5cm; }
+  body * { visibility:hidden; }
+  body { background-color:#fff; }
+  .printable-invoice,.printable-invoice * { visibility:visible; }
+  .printable-invoice { position:absolute; left:0; top:0; width:100%; max-width:none; margin:0; padding:0; border:none; box-shadow:none; overflow:visible; }
+}
