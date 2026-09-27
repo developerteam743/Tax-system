@@ -41,7 +41,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, unpos
                 {badge !== null && badge > 0 && <span className={`text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 ${activeTab === id ? 'bg-white text-blue-700' : 'bg-blue-600 text-white'}`}>{badge}</span>}
               </button>
               {id === 'PARTIES_MASTER' && (
-                <button type="button" onClick={openPartyMaster} className="shrink-0 h-auto min-h-[44px] w-16 rounded-2xl border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 hover:border-blue-400 hover:shadow-sm flex flex-col items-center justify-center gap-0.5 font-black" title="Create, edit or delete customers and vendors" aria-label="Manage customers and vendors">
+                <button type="button" onClick={openPartyMaster} className="shrink-0 h-auto min-h-[44px] w-16 rounded-2xl border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 hover:border-blue-400 hover:shadow-sm transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 flex flex-col items-center justify-center gap-0.5 font-black" title="Create, edit or delete customers and vendors" aria-label="Manage customers and vendors">
                   <Settings className="w-4 h-4" /><span className="text-[8px] uppercase leading-none tracking-wide">Manage</span>
                 </button>
               )}
@@ -70,7 +70,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, unpos
                 <button onClick={() => id === 'PARTIES_MASTER' ? openPartyMaster() : setActiveTab(id)} aria-label={label} className={`w-full flex items-center justify-center gap-1 min-h-9 px-1 rounded-xl text-[9px] font-black ${activeTab === id ? 'text-blue-700 bg-blue-50' : 'text-slate-500 hover:bg-slate-50'}`}>
                   <Icon className="w-3.5 h-3.5 shrink-0" /><span className="truncate">{short[i + 5]}</span>{badge !== null && badge > 0 && <span className="text-[8px] rounded-full bg-rose-500 text-white px-1">{badge}</span>}
                 </button>
-                {id === 'PARTIES_MASTER' && <button type="button" onClick={openPartyMaster} className="absolute right-0 top-0.5 h-8 w-8 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-[var(--shadow-soft)] shadow-blue-600/20" aria-label="Manage customers and vendors"><Settings className="w-3.5 h-3.5" /></button>}
+                {id === 'PARTIES_MASTER' && <button type="button" onClick={openPartyMaster} className="absolute right-0 top-0.5 h-8 w-8 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-[var(--shadow-soft)] shadow-blue-600/20 hover:-translate-y-0.5 hover:shadow-[var(--shadow-hover)] transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50" aria-label="Manage customers and vendors"><Settings className="w-3.5 h-3.5" /></button>}
               </div>
             ))}
           </div>
