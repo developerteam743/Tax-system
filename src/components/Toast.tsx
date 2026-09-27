@@ -35,7 +35,7 @@ export const Toast: React.FC<ToastProps> = ({ toasts, onDismiss }) => {
                 {toast.description && <div className="text-xs text-slate-300 mt-1.5 leading-relaxed break-words">{toast.description}</div>}
               </div>
             </div>
-            <button onClick={() => onDismiss(toast.id)} aria-label="Dismiss notification" className="shrink-0 min-h-9 min-w-9 flex items-center justify-center text-slate-400 hover:text-white rounded-xl hover:bg-white/10 transition-colors cursor-pointer">
+            <button onClick={() => onDismiss(toast.id)} aria-label="Dismiss notification" className="shrink-0 min-h-9 min-w-9 flex items-center justify-center text-slate-400 hover:text-white rounded-xl hover:bg-white/10 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50">
               <X className="w-4 h-4" />
             </button>
           </div>
