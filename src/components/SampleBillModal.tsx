@@ -35,7 +35,7 @@ Grand Total: ₹35,400.00`;
 
   return (
     <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-start sm:items-center justify-center p-0 sm:p-4 overflow-y-auto overscroll-contain">
-      <div className="bg-white rounded-none sm:rounded-3xl shadow-2xl max-w-2xl w-full min-h-screen sm:min-h-0 sm:max-h-[calc(100dvh-2rem)] overflow-hidden border-0 sm:border border-slate-200 animate-in zoom-in-95 duration-200 flex flex-col">
+      <div className="bg-white rounded-none sm:rounded-3xl shadow-[var(--shadow-hover)] max-w-2xl w-full min-h-screen sm:min-h-0 sm:max-h-[calc(100dvh-2rem)] overflow-hidden border-0 sm:border border-slate-200 animate-in zoom-in-95 duration-200 flex flex-col">
         <div className="bg-slate-900 text-white p-3 sm:p-4 sm:px-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
           <div className="flex items-center gap-2 min-w-0"><Building2 className="w-5 h-5 text-blue-400 shrink-0" /><span className="font-bold text-sm leading-5 break-words">Official Gujarat MSME Sample Purchase Bill</span></div>
           <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
@@ -75,9 +75,9 @@ Grand Total: ₹35,400.00`;
           </div>
         </div>
 
-        <div className="p-3 sm:p-4 sm:px-6 bg-slate-100 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
+        <div className="p-3 sm:p-4 sm:px-6 bg-slate-50/90 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
           <span className="text-xs text-slate-500 leading-5">Point your camera or click below to trigger instant OCR extraction.</span>
-          <button onClick={() => { onClose(); onScanThisBill(); }} className="w-full sm:w-auto min-h-11 px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-md shadow-purple-500/20 active:scale-95 transition-all cursor-pointer"><Sparkles className="w-4 h-4" /> OCR Scan This Invoice Now</button>
+          <button onClick={() => { onClose(); onScanThisBill(); }} className="w-full sm:w-auto min-h-11 px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-[var(--shadow-soft)] shadow-purple-500/20 active:scale-95 transition-all cursor-pointer"><Sparkles className="w-4 h-4" /> OCR Scan This Invoice Now</button>
         </div>
       </div>
     </div>
