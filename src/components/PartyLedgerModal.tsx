@@ -32,7 +32,7 @@ export const PartyLedgerModal: React.FC<PartyLedgerModalProps> = ({ party, ledge
           </button>
         </div>
 
-        <div className="bg-slate-50 p-3 sm:p-4 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="bg-slate-50/80 p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="min-w-0">
             <span className="text-[10px] sm:text-xs text-slate-500 uppercase tracking-wider block font-bold">Net Account Balance</span>
             <div className={`text-xl sm:text-2xl font-black mt-0.5 break-words ${isReceivable ? 'text-emerald-600' : 'text-amber-600'}`}>
@@ -48,7 +48,7 @@ export const PartyLedgerModal: React.FC<PartyLedgerModalProps> = ({ party, ledge
 
         <div className="space-y-3 min-w-0">
           <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Transaction Vouchers Log</h4>
-          <div className="bg-white rounded-xl border border-slate-200 overflow-x-auto shadow-xs">
+          <div className="bg-white/95 rounded-2xl border border-slate-200 overflow-x-auto shadow-sm">
             <table className="w-full min-w-[620px] text-left text-xs text-slate-700">
               <thead className="bg-slate-50 text-slate-500 uppercase text-[10px] tracking-wider font-bold border-b border-slate-200">
                 <tr>
@@ -57,7 +57,7 @@ export const PartyLedgerModal: React.FC<PartyLedgerModalProps> = ({ party, ledge
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {ledgerEntries.map((entry) => (
-                  <tr key={entry.id} className="hover:bg-slate-50">
+                  <tr key={entry.id} className="hover:bg-blue-50/40 transition-colors">
                     <td className="p-2.5 sm:p-3 font-mono text-slate-500">{entry.date}</td>
                     <td className="p-2.5 sm:p-3"><span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100">{entry.voucherType}</span></td>
                     <td className="p-2.5 sm:p-3 font-mono font-bold text-slate-900">{entry.voucherNo}</td>
