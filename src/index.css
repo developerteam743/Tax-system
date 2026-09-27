@@ -16,7 +16,9 @@
   --base-font-size:clamp(13px,.25vw + 12px,16px);
   --app-gutter:clamp(.75rem,1.8vw,2rem);
   --section-gap:clamp(.75rem,1.6vw,1.5rem);
-  --card-radius:clamp(.8rem,1vw,1rem);
+  --card-radius:clamp(.9rem,1vw,1.15rem);
+  --control-height:2.75rem;
+  --control-radius:.75rem;
   --shadow-soft:0 1px 2px rgba(15,23,42,.04),0 8px 30px rgba(15,23,42,.05);
   --shadow-hover:0 12px 32px rgba(15,23,42,.10);
 }
@@ -44,6 +46,8 @@ main { min-width:0; max-width:100%; width:100%; box-sizing:border-box; }
 main > * { min-width:0; max-width:100%; }
 section,article,form,fieldset { min-width:0; max-width:100%; }
 button,input,select,textarea { max-width:100%; box-sizing:border-box; font:inherit; }
+button:not([class*="min-h-"]):not([class*="h-"]) { min-height:var(--control-height); }
+input:not([type="checkbox"]):not([type="radio"]),select,textarea { border-radius:var(--control-radius); }
 button { -webkit-tap-highlight-color:transparent; }
 input,select,textarea,pre,td,th,.breakable { overflow-wrap:anywhere; word-break:break-word; }
 img,svg,video,canvas { max-width:100%; }
@@ -103,6 +107,10 @@ main button {
   transition:transform .16s ease,box-shadow .16s ease,background-color .16s ease,border-color .16s ease,color .16s ease;
 }
 main button:not(:disabled):active { transform:translateY(1px); }
+main button:not(:disabled):hover { filter:saturate(1.03); }
+main input::placeholder, main textarea::placeholder { color:#94a3b8; }
+main select { cursor:pointer; }
+main input:disabled, main select:disabled, main textarea:disabled { cursor:not-allowed; opacity:.72; }
 main button:disabled { cursor:not-allowed; opacity:.6; }
 
 /* Keyboard focus is visible without changing the visual language for pointer users. */
