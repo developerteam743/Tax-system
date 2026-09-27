@@ -45,7 +45,7 @@ Grand Total: ₹35,400.00`;
         </div>
 
         <div className="p-3 sm:p-6 overflow-y-auto bg-slate-50 flex-1 min-h-0">
-          <div className="bg-white p-4 sm:p-8 rounded-2xl border border-slate-300 shadow-sm text-xs font-sans space-y-5 print:border-none print:shadow-none min-w-0">
+          <div className="bg-white p-4 sm:p-8 rounded-3xl border border-slate-300 shadow-[var(--shadow-soft)] text-xs font-sans space-y-5 print:border-none print:shadow-none min-w-0">
             <div className="border-b border-slate-200 pb-4 flex flex-col sm:flex-row justify-between items-start gap-4">
               <div className="min-w-0">
                 <span className="inline-block text-[10px] font-bold text-blue-700 uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded border border-blue-100">TAX INVOICE / BILL OF SUPPLY</span>
@@ -56,12 +56,12 @@ Grand Total: ₹35,400.00`;
               <div className="text-left sm:text-right shrink-0 max-w-full"><div className="text-[11px] font-bold text-slate-500 uppercase">Original For Recipient</div><div className="text-sm font-black font-mono text-slate-900 mt-1 break-all">INV # GIP/2026-27/0842</div><div className="text-slate-500 font-mono mt-0.5">Date: 16-Aug-2026</div></div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 bg-slate-50 p-3 rounded-xl border border-slate-200">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 bg-slate-50/80 p-3 rounded-2xl border border-slate-200">
               <div className="min-w-0"><div className="font-bold text-slate-500 uppercase text-[10px]">Billed To (Customer):</div><div className="font-bold text-slate-800 mt-0.5 break-words">Apex Electronics &amp; Industrial Traders</div><div className="text-slate-500 text-[11px] break-words">Plot 42, Vatva Industrial Area, Ahmedabad, Gujarat</div><div className="font-mono font-bold text-blue-700 mt-0.5 break-all">GSTIN: 24AAPCA1234F1ZV (Gujarat 24)</div></div>
               <div className="min-w-0"><div className="font-bold text-slate-500 uppercase text-[10px]">Dispatched Via:</div><div className="text-slate-700 mt-0.5 break-words">Gujarat Freight Carrier (Truck # GJ-01-BX-8822)</div><div className="text-slate-500 text-[11px] break-words">E-Way Bill No: 241088923491</div><div className="text-emerald-700 font-bold mt-0.5">Place of Supply: Gujarat (24)</div></div>
             </div>
 
-            <div className="border border-slate-200 rounded-xl overflow-hidden">
+            <div className="border border-slate-200 rounded-2xl overflow-hidden">
               <div className="overflow-x-auto"><table className="w-full min-w-[620px] text-left">
                 <thead className="bg-slate-100 border-b border-slate-200 text-[11px] font-bold text-slate-700"><tr><th className="p-2.5">#</th><th className="p-2.5">Item Description</th><th className="p-2.5">HSN Code</th><th className="p-2.5 text-right">Qty</th><th className="p-2.5 text-right">Rate (₹)</th><th className="p-2.5 text-right">Taxable (₹)</th></tr></thead>
                 <tbody className="divide-y divide-slate-100 text-[11px]"><tr><td className="p-2.5 font-bold">1</td><td className="p-2.5"><div className="font-bold text-slate-800">Industrial Polypropylene Granules</div><div className="text-slate-400 text-[10px]">Grade-A Injection Molding Polymer</div></td><td className="p-2.5 font-mono">39021000</td><td className="p-2.5 text-right font-mono font-semibold">25 BAGS</td><td className="p-2.5 text-right font-mono">1,200.00</td><td className="p-2.5 text-right font-mono font-bold">30,000.00</td></tr></tbody>
