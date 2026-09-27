@@ -74,7 +74,7 @@ export const OnboardingWizardModal: React.FC<OnboardingWizardModalProps> = ({ is
 
   return (
     <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-slate-900/60 backdrop-blur-sm p-0 sm:p-4 overflow-y-auto overscroll-contain">
-      <div className="bg-white rounded-none sm:rounded-3xl shadow-[var(--shadow-hover)] max-w-2xl w-full min-h-screen sm:min-h-0 sm:max-h-[calc(100dvh-2rem)] overflow-hidden border-0 sm:border border-slate-100 animate-in fade-in zoom-in duration-200 flex flex-col">
+      <div className="bg-white rounded-none sm:rounded-3xl shadow-[var(--shadow-hover)] max-w-2xl w-full min-h-screen sm:min-h-0 sm:max-h-[calc(100dvh-2rem)] overflow-hidden border-0 sm:border border-slate-100 animate-fadeIn flex flex-col">
         <div className="bg-gradient-to-r from-blue-700 via-blue-600 to-sky-600 p-4 sm:p-6 text-white relative shrink-0">
           <button onClick={onClose} aria-label="Close onboarding" className="absolute top-3 right-3 sm:top-5 sm:right-5 text-white/80 hover:text-white p-2.5 rounded-full hover:bg-white/10 transition-all min-w-11 min-h-11 flex items-center justify-center">
             <X className="w-5 h-5" />
