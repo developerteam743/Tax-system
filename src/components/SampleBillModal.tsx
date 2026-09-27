@@ -39,8 +39,8 @@ Grand Total: ₹35,400.00`;
         <div className="bg-slate-900 text-white p-3 sm:p-4 sm:px-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
           <div className="flex items-center gap-2 min-w-0"><Building2 className="w-5 h-5 text-blue-400 shrink-0" /><span className="font-bold text-sm leading-5 break-words">Official Gujarat MSME Sample Purchase Bill</span></div>
           <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
-            <button onClick={handleCopy} className="min-h-11 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-all text-slate-300 hover:text-white">{copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}{copied ? 'Copied' : 'Copy Text'}</button>
-            <button onClick={onClose} aria-label="Close sample bill" className="min-w-11 min-h-11 p-2 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 transition-all flex items-center justify-center"><X className="w-5 h-5" /></button>
+            <button onClick={handleCopy} className="min-h-11 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-all text-slate-300 hover:text-white cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50">{copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}{copied ? 'Copied' : 'Copy Text'}</button>
+            <button onClick={onClose} aria-label="Close sample bill" className="min-w-11 min-h-11 p-2 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 transition-all flex items-center justify-center cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"><X className="w-5 h-5" /></button>
           </div>
         </div>
 
@@ -77,7 +77,7 @@ Grand Total: ₹35,400.00`;
 
         <div className="p-3 sm:p-4 sm:px-6 bg-slate-50/90 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
           <span className="text-xs text-slate-500 leading-5">Point your camera or click below to trigger instant OCR extraction.</span>
-          <button onClick={() => { onClose(); onScanThisBill(); }} className="w-full sm:w-auto min-h-11 px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-[var(--shadow-soft)] shadow-purple-500/20 active:scale-95 transition-all cursor-pointer"><Sparkles className="w-4 h-4" /> OCR Scan This Invoice Now</button>
+          <button onClick={() => { onClose(); onScanThisBill(); }} className="w-full sm:w-auto min-h-11 px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-[var(--shadow-soft)] shadow-purple-500/20 hover:-translate-y-0.5 hover:shadow-[var(--shadow-hover)] active:scale-95 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/50"><Sparkles className="w-4 h-4" /> OCR Scan This Invoice Now</button>
         </div>
       </div>
     </div>
