@@ -36,7 +36,7 @@ export const MISDashboard: React.FC<MISDashboardProps> = ({ parties = [], salesI
             </span>
             <span className="text-[11px] sm:text-xs text-blue-100 font-medium">Gujarat (State Code 24)</span>
           </div>
-          <h1 className="text-xl sm:text-2xl font-black tracking-tight mt-2 text-white break-words">Apex Electronics &amp; Traders MIS Overview</h1>
+          <h1 className="text-xl sm:text-2xl sm:text-3xl font-black tracking-tight mt-2 text-white break-words">Apex Electronics &amp; Traders MIS Overview</h1>
           <p className="text-xs text-blue-100 mt-1 max-w-xl leading-5">Real-time business liquidity, receivables aging, AI OCR inbox, and bank reconciliation matcher.</p>
         </div>
         <button onClick={() => onSwitchTab('SALES_BILLING')} className="w-full lg:w-auto shrink-0 flex items-center justify-center gap-2 text-xs font-bold px-4 py-3 rounded-xl bg-white text-blue-700 hover:bg-blue-50 shadow-md transition-all cursor-pointer min-h-11">
@@ -45,24 +45,24 @@ export const MISDashboard: React.FC<MISDashboardProps> = ({ parties = [], salesI
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-md hover:shadow-lg transition-all space-y-2 min-w-0">
+        <div className="bg-white\/95 p-4 sm:p-5 backdrop-blur-sm rounded-3xl border border-slate-200\/80 shadow-[var(--shadow-soft)] hover:shadow-[var(--shadow-hover)] transition-all duration-300 space-y-2 min-w-0">
           <div className="flex items-center justify-between gap-2"><span className="text-[11px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Total Receivables</span><div className="p-2 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 shrink-0"><ArrowDownLeft className="w-4 h-4" /></div></div>
-          <div className="text-2xl font-black text-emerald-600 tracking-tight break-all">{formatINR(totalReceivables)}</div>
+          <div className="text-2xl sm:text-3xl font-black text-emerald-600 tracking-tight break-all">{formatINR(totalReceivables)}</div>
           <p className="text-[11px] text-slate-500">Pending from <span className="font-bold text-slate-700">{customers.length} Customers</span></p>
         </div>
-        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-md hover:shadow-lg transition-all space-y-2 min-w-0">
+        <div className="bg-white\/95 p-4 sm:p-5 backdrop-blur-sm rounded-3xl border border-slate-200\/80 shadow-[var(--shadow-soft)] hover:shadow-[var(--shadow-hover)] transition-all duration-300 space-y-2 min-w-0">
           <div className="flex items-center justify-between gap-2"><span className="text-[11px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Total Payables</span><div className="p-2 rounded-xl bg-amber-50 text-amber-600 border border-amber-100 shrink-0"><ArrowUpRight className="w-4 h-4" /></div></div>
-          <div className="text-2xl font-black text-amber-600 tracking-tight break-all">{formatINR(totalPayables)}</div>
+          <div className="text-2xl sm:text-3xl font-black text-amber-600 tracking-tight break-all">{formatINR(totalPayables)}</div>
           <p className="text-[11px] text-slate-500">Dues to <span className="font-bold text-slate-700">{vendors.length} Suppliers</span></p>
         </div>
-        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-md hover:shadow-lg transition-all space-y-2 min-w-0">
+        <div className="bg-white\/95 p-4 sm:p-5 backdrop-blur-sm rounded-3xl border border-slate-200\/80 shadow-[var(--shadow-soft)] hover:shadow-[var(--shadow-hover)] transition-all duration-300 space-y-2 min-w-0">
           <div className="flex items-center justify-between gap-2"><span className="text-[11px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">HDFC Bank Balance</span><div className="p-2 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 shrink-0"><Landmark className="w-4 h-4" /></div></div>
-          <div className="text-2xl font-black text-blue-700 tracking-tight break-all">{formatINR(bankBalance)}</div>
+          <div className="text-2xl sm:text-3xl font-black text-blue-700 tracking-tight break-all">{formatINR(bankBalance)}</div>
           <p className="text-[11px] text-slate-500">Net Liquidity: <span className="font-bold text-emerald-600">HEALTHY</span></p>
         </div>
-        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-purple-200 shadow-md hover:shadow-lg transition-all space-y-2 min-w-0">
+        <div className="bg-white\/95 p-4 sm:p-5 backdrop-blur-sm rounded-2xl border border-purple-200 shadow-[var(--shadow-soft)] hover:shadow-[var(--shadow-hover)] transition-all duration-300 space-y-2 min-w-0">
           <div className="flex items-center justify-between gap-2"><span className="text-[11px] sm:text-xs font-bold text-purple-700 uppercase tracking-wider">AI OCR Inbox</span><div className="p-2 rounded-xl bg-purple-50 text-purple-600 border border-purple-100 shrink-0"><AlertCircle className="w-4 h-4" /></div></div>
-          <div className="text-2xl font-black text-purple-700 tracking-tight">{unpostedOcrCount} Bills</div>
+          <div className="text-2xl sm:text-3xl font-black text-purple-700 tracking-tight">{unpostedOcrCount} Bills</div>
           <button onClick={() => onSwitchTab('AI_PURCHASE_OCR')} className="min-h-11 text-[11px] text-purple-600 font-bold hover:underline flex items-center gap-1 cursor-pointer">Review &amp; Post to Ledger →</button>
         </div>
       </div>
