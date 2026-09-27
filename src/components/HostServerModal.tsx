@@ -21,7 +21,7 @@ export const HostServerModal: React.FC<HostServerModalProps> = ({ status, onClos
           </button>
         </div>
 
-        <div className="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200 p-3 sm:p-4 rounded-2xl shadow-sm space-y-2">
+        <div className="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200 p-3 sm:p-4 rounded-2xl shadow-[var(--shadow-soft)] space-y-2">
           <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-bold text-emerald-800">
             <span className="flex items-center gap-1.5 min-w-0"><ShieldCheck className="w-4 h-4 shrink-0 text-emerald-600" /> Master Host Node Active</span>
             <span className="px-2 py-0.5 rounded bg-emerald-200 text-emerald-900 text-[10px] uppercase font-mono">ONLINE</span>
