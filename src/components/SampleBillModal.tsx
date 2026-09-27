@@ -35,7 +35,7 @@ Grand Total: ₹35,400.00`;
 
   return (
     <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-start sm:items-center justify-center p-0 sm:p-4 overflow-y-auto overscroll-contain">
-      <div className="bg-white rounded-none sm:rounded-3xl shadow-[var(--shadow-hover)] max-w-2xl w-full min-h-screen sm:min-h-0 sm:max-h-[calc(100dvh-2rem)] overflow-hidden border-0 sm:border border-slate-200 animate-in zoom-in-95 duration-200 flex flex-col">
+      <div className="bg-white rounded-none sm:rounded-3xl shadow-[var(--shadow-hover)] max-w-2xl w-full min-h-screen sm:min-h-0 sm:max-h-[calc(100dvh-2rem)] overflow-hidden border-0 sm:border border-slate-200 animate-fadeIn flex flex-col">
         <div className="bg-slate-900 text-white p-3 sm:p-4 sm:px-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
           <div className="flex items-center gap-2 min-w-0"><Building2 className="w-5 h-5 text-blue-400 shrink-0" /><span className="font-bold text-sm leading-5 break-words">Official Gujarat MSME Sample Purchase Bill</span></div>
           <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
