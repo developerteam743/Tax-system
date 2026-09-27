@@ -49,14 +49,14 @@ export const PartyMasterManager: React.FC<PartyMasterManagerProps> = ({ isOpen, 
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/50 backdrop-blur-sm p-2 sm:p-4 flex items-start sm:items-center justify-center overflow-y-auto">
-      <div className="w-full max-w-6xl max-h-[calc(100dvh-1rem)] sm:max-h-[calc(100dvh-2rem)] overflow-hidden rounded-2xl bg-white shadow-2xl border border-slate-200 flex flex-col">
+      <div className="w-full max-w-6xl max-h-[calc(100dvh-1rem)] sm:max-h-[calc(100dvh-2rem)] overflow-hidden rounded-3xl bg-white shadow-2xl border border-slate-200 flex flex-col">
         <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-200 flex items-center justify-between gap-3 shrink-0">
           <div className="min-w-0"><h2 className="text-base sm:text-lg font-bold text-slate-900 truncate">Customer & Vendor Master</h2><p className="text-[11px] sm:text-xs text-slate-500">Create, edit and delete customer/vendor records</p></div>
           <button type="button" onClick={onClose} className="h-10 w-10 shrink-0 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center" aria-label="Close"><X className="w-5 h-5" /></button>
         </div>
         <div className="p-3 sm:p-5 overflow-y-auto min-h-0">
           <div className="flex flex-col lg:flex-row gap-2 mb-4">
-            <div className="relative flex-1"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search name, GSTIN, phone, city..." className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm outline-none focus:border-blue-500" /></div>
+            <div className="relative flex-1"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search name, GSTIN, phone, city..." className="w-full pl-9 pr-3 py-2.5 rounded-2xl border border-slate-200 bg-slate-50\/80 text-sm outline-none focus:border-blue-500" /></div>
             <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value as 'ALL' | PartyType)} className="rounded-xl border border-slate-200 px-3 py-2.5 text-sm bg-white"><option value="ALL">All parties</option><option value="CUSTOMER">Customers</option><option value="VENDOR">Vendors</option><option value="BOTH">Customer + Vendor</option></select>
             <button type="button" onClick={() => startCreate('CUSTOMER')} className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 text-white px-4 py-2.5 text-sm font-bold hover:bg-blue-700"><Plus className="w-4 h-4" /> Add Customer</button>
             <button type="button" onClick={() => startCreate('VENDOR')} className="inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 text-white px-4 py-2.5 text-sm font-bold hover:bg-amber-600"><Plus className="w-4 h-4" /> Add Vendor</button>
