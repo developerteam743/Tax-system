@@ -14,7 +14,7 @@ export const PartyLedgerModal: React.FC<PartyLedgerModalProps> = ({ party, ledge
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-start sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
-      <div className="bg-white/95 backdrop-blur-sm border border-slate-200 w-full max-w-3xl min-h-screen sm:min-h-0 rounded-none sm:rounded-2xl p-3 sm:p-5 lg:p-6 shadow-[var(--shadow-hover)] space-y-4 sm:space-y-6 sm:my-4 text-slate-800 animate-fadeIn overflow-y-auto max-h-[100dvh] sm:max-h-[calc(100dvh-2rem)]">
+      <div className="bg-white/95 backdrop-blur-sm border border-slate-200 w-full max-w-3xl min-h-screen sm:min-h-0 rounded-none sm:rounded-3xl p-3 sm:p-5 lg:p-6 shadow-[var(--shadow-hover)] space-y-4 sm:space-y-6 sm:my-4 text-slate-800 animate-fadeIn overflow-y-auto max-h-[100dvh] sm:max-h-[calc(100dvh-2rem)]">
         <div className="flex items-start justify-between gap-3 border-b border-slate-100 pb-4">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
@@ -32,7 +32,7 @@ export const PartyLedgerModal: React.FC<PartyLedgerModalProps> = ({ party, ledge
           </button>
         </div>
 
-        <div className="bg-slate-50/80 p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="bg-slate-50/80 p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-[var(--shadow-soft)] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="min-w-0">
             <span className="text-[10px] sm:text-xs text-slate-500 uppercase tracking-wider block font-bold">Net Account Balance</span>
             <div className={`text-xl sm:text-2xl font-black mt-0.5 break-words ${isReceivable ? 'text-emerald-600' : 'text-amber-600'}`}>
