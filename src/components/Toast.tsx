@@ -23,7 +23,7 @@ export const Toast: React.FC<ToastProps> = ({ toasts, onDismiss }) => {
           <div
             key={toast.id}
             role="status"
-            className={`pointer-events-auto relative overflow-hidden flex items-start justify-between gap-3 p-3.5 sm:p-4 rounded-2xl border shadow-2xl backdrop-blur-xl transition-all animate-bounceIn min-w-0 ring-1 ring-white/10 ${isSuccess ? 'bg-slate-950/95 border-emerald-500/30 text-white shadow-emerald-950/20' : isWarning ? 'bg-slate-950/95 border-amber-500/30 text-white shadow-amber-950/20' : 'bg-slate-950/95 border-blue-500/30 text-white shadow-blue-950/20'}`}
+            className={`pointer-events-auto relative overflow-hidden flex items-start justify-between gap-3 p-3.5 sm:p-4 rounded-2xl border shadow-2xl backdrop-blur-xl transition-all animate-fadeIn min-w-0 ring-1 ring-white/10 ${isSuccess ? 'bg-slate-950/95 border-emerald-500/30 text-white shadow-emerald-950/20' : isWarning ? 'bg-slate-950/95 border-amber-500/30 text-white shadow-amber-950/20' : 'bg-slate-950/95 border-blue-500/30 text-white shadow-blue-950/20'}`}
           >
             <div className={`absolute left-0 top-0 bottom-0 w-1 ${isSuccess ? 'bg-emerald-500' : isWarning ? 'bg-amber-500' : 'bg-blue-500'}`} />
             <div className="flex items-start gap-3 min-w-0 pl-1">
