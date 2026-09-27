@@ -27,7 +27,7 @@ export const PartyLedgerModal: React.FC<PartyLedgerModalProps> = ({ party, ledge
               GSTIN: <span className="font-mono text-slate-700 font-bold">{party.gstin}</span> • Phone: {party.phone} • Email: {party.email}
             </p>
           </div>
-          <button onClick={onClose} aria-label="Close statement" className="shrink-0 w-10 h-10 min-h-10 rounded-xl bg-slate-100 text-slate-500 hover:text-slate-700 flex items-center justify-center cursor-pointer">
+          <button onClick={onClose} aria-label="Close statement" className="shrink-0 w-10 h-10 min-h-10 rounded-xl bg-slate-100 text-slate-500 hover:text-slate-700 hover:bg-slate-200 transition-all flex items-center justify-center cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -57,7 +57,7 @@ export const PartyLedgerModal: React.FC<PartyLedgerModalProps> = ({ party, ledge
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {ledgerEntries.map((entry) => (
-                  <tr key={entry.id} className="hover:bg-blue-50/40 transition-colors">
+                  <tr key={entry.id} className="hover:bg-blue-50/50 transition-colors duration-200">
                     <td className="p-2.5 sm:p-3 font-mono text-slate-500">{entry.date}</td>
                     <td className="p-2.5 sm:p-3"><span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100">{entry.voucherType}</span></td>
                     <td className="p-2.5 sm:p-3 font-mono font-bold text-slate-900">{entry.voucherNo}</td>
@@ -75,10 +75,10 @@ export const PartyLedgerModal: React.FC<PartyLedgerModalProps> = ({ party, ledge
           <button onClick={() => {
             const text = `Hi ${party.name}, your outstanding bill balance is ${formatCurrency(party.currentBalance)}. Please clear the pending dues. Thank you!`;
             window.open(`https://wa.me/${party.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(text)}`, '_blank');
-          }} className="w-full sm:w-auto flex items-center justify-center gap-2 text-xs font-bold px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white shadow-[var(--shadow-soft)] transition-all cursor-pointer min-h-11">
+          }} className="w-full sm:w-auto flex items-center justify-center gap-2 text-xs font-bold px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 hover:-translate-y-0.5 text-white shadow-[var(--shadow-soft)] hover:shadow-[var(--shadow-hover)] transition-all cursor-pointer min-h-11 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50">
             <Send className="w-3.5 h-3.5" /> Send WhatsApp Balance Reminder
           </button>
-          <button onClick={onClose} className="w-full sm:w-auto px-4 py-2.5 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer min-h-11">Close Statement</button>
+          <button onClick={onClose} className="w-full sm:w-auto px-4 py-2.5 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 hover:shadow-sm transition-all cursor-pointer min-h-11 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/50">Close Statement</button>
         </div>
       </div>
     </div>
