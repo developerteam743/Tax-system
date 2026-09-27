@@ -160,6 +160,11 @@ main button:disabled { cursor:not-allowed; opacity:.6; }
 }
 @supports (padding:max(0px)) { .pb-safe { padding-bottom:max(.5rem,env(safe-area-inset-bottom)); } }
 
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior:auto; }
+  *,*::before,*::after { animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
+}
+
 @media print {
   @page { margin:.5cm; }
   body * { visibility:hidden; }
