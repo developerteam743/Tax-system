@@ -425,7 +425,7 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
+    <div className="min-h-screen bg-[var(--bg-main)] text-slate-900 flex flex-col font-sans">
       {/* GLOBAL NAVBAR */}
       <Navbar
         viewMode={viewMode}
@@ -442,7 +442,7 @@ export function App() {
       {/* MOBILE SIMULATOR WRAPPER */}
       <div className="flex-1 flex flex-col">
         {isMobileSimulator && (
-          <div className="bg-gradient-to-r from-purple-800 to-indigo-800 text-white px-4 py-2 text-xs flex items-center justify-between shadow-md">
+          <div className="bg-gradient-to-r from-slate-950 via-indigo-950 to-purple-950 text-white px-4 py-2 text-xs flex items-center justify-between shadow-lg">
             <span className="font-semibold flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping"></span>
               📱 Mobile Partner Simulator Active — Testing Shop-Floor Mobile View
@@ -451,7 +451,7 @@ export function App() {
               <span className="text-[11px] text-purple-200">Local Wi-Fi: http://192.168.29.128:5174/</span>
               <button
                 onClick={() => setIsMobileSimulator(false)}
-                className="bg-white/20 hover:bg-white/30 px-2 py-0.5 rounded text-[11px] font-bold"
+                className="bg-white/10 hover:bg-white/20 border border-white/10 px-2.5 py-1 rounded-lg text-[11px] font-bold"
               >
                 Exit Simulator
               </button>
@@ -464,7 +464,7 @@ export function App() {
           <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} isMobile={isMobileSimulator} />
 
           {/* MAIN WORKSPACE CONTENT */}
-          <main className="flex-1 p-4 sm:p-6 overflow-y-auto max-w-7xl mx-auto w-full">
+          <main className="flex-1 p-3 sm:p-5 lg:p-6 overflow-y-auto max-w-[1440px] mx-auto w-full">
             {activeTab === 'MIS_DASHBOARD' && (
               <MISDashboard
                 parties={parties}
@@ -525,19 +525,19 @@ export function App() {
             )}
 
             {(activeTab === 'PARTIES_MASTER' || (activeTab as any) === 'PARTY_MASTER') && (
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
+              <div className="space-y-5 sm:space-y-6 animate-fadeIn">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white/95 backdrop-blur-sm p-4 sm:p-6 rounded-3xl border border-slate-200 shadow-[var(--shadow-soft)]">
                   <div>
-                    <h2 className="text-xl font-bold text-slate-900">Customer &amp; Vendor Ledger Master</h2>
+                    <h2 className="text-lg sm:text-xl font-black tracking-tight text-slate-900">Customer &amp; Vendor Ledger Master</h2>
                     <p className="text-xs text-slate-500">
                       Manage all Gujarat ({businessProfile.stateCode}) and Interstate business parties with opening balances
                     </p>
                   </div>
                 </div>
 
-                <div className="bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden">
+                <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-[var(--shadow-soft)] border border-slate-200 overflow-hidden">
                   <table className="w-full text-left text-xs">
-                    <thead className="bg-slate-50 text-slate-600 border-b border-slate-200">
+                    <thead className="bg-gradient-to-r from-slate-50 to-blue-50/50 text-slate-600 border-b border-slate-200">
                       <tr>
                         <th className="p-3 font-semibold">Party Name</th>
                         <th className="p-3 font-semibold">GSTIN</th>
@@ -549,7 +549,7 @@ export function App() {
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                       {parties.map((p) => (
-                        <tr key={p.id} className="hover:bg-slate-50">
+                        <tr key={p.id} className="hover:bg-blue-50/40 transition-colors">
                           <td className="p-3 font-bold text-slate-800">{p.name}</td>
                           <td className="p-3 font-mono text-slate-500">{p.gstin || 'UNREGISTERED'}</td>
                           <td className="p-3">
@@ -574,7 +574,7 @@ export function App() {
                           <td className="p-3 text-right">
                             <button
                               onClick={() => setSelectedPartyForLedger(p)}
-                              className="px-2.5 py-1 rounded bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 cursor-pointer"
+                              className="px-3 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-500 shadow-sm transition-all cursor-pointer"
                             >
                               Statement
                             </button>
