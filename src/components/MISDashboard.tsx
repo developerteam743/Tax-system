@@ -28,7 +28,7 @@ export const MISDashboard: React.FC<MISDashboardProps> = ({ parties = [], salesI
 
   return (
     <div className="space-y-4 sm:space-y-6 animate-fadeIn min-w-0">
-      <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-600 rounded-2xl p-4 sm:p-6 text-white shadow-xl flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 overflow-hidden">
+      <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-600 rounded-2xl p-4 sm:p-6 text-white shadow-[var(--shadow-hover)] flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 overflow-hidden">
         <div className="min-w-0 w-full">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-[10px] sm:text-xs font-bold px-2.5 py-1 rounded-lg bg-white/20 text-white backdrop-blur-sm uppercase tracking-wider break-words">
@@ -39,7 +39,7 @@ export const MISDashboard: React.FC<MISDashboardProps> = ({ parties = [], salesI
           <h1 className="text-xl sm:text-2xl sm:text-3xl font-black tracking-tight mt-2 text-white break-words">Apex Electronics &amp; Traders MIS Overview</h1>
           <p className="text-xs text-blue-100 mt-1 max-w-xl leading-5">Real-time business liquidity, receivables aging, AI OCR inbox, and bank reconciliation matcher.</p>
         </div>
-        <button onClick={() => onSwitchTab('SALES_BILLING')} className="w-full lg:w-auto shrink-0 flex items-center justify-center gap-2 text-xs font-bold px-4 py-3 rounded-xl bg-white text-blue-700 hover:bg-blue-50 shadow-md transition-all cursor-pointer min-h-11">
+        <button onClick={() => onSwitchTab('SALES_BILLING')} className="w-full lg:w-auto shrink-0 flex items-center justify-center gap-2 text-xs font-bold px-4 py-3 rounded-xl bg-white text-blue-700 hover:bg-blue-50 shadow-[var(--shadow-soft)] transition-all cursor-pointer min-h-11">
           <Zap className="w-4 h-4 text-amber-500 fill-amber-500" /> Fast Sales Bill
         </button>
       </div>
@@ -68,7 +68,7 @@ export const MISDashboard: React.FC<MISDashboardProps> = ({ parties = [], salesI
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-        <div className="lg:col-span-2 bg-white border border-slate-200 rounded-2xl shadow-md p-4 sm:p-5 space-y-4 min-w-0">
+        <div className="lg:col-span-2 bg-white border border-slate-200 rounded-3xl shadow-[var(--shadow-soft)] p-4 sm:p-5 space-y-4 min-w-0">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
             <div className="min-w-0"><h3 className="text-base font-bold text-slate-900 flex items-center gap-2"><TrendingUp className="w-5 h-5 text-blue-600 shrink-0" /> Customer Outstanding Ledgers</h3><p className="text-xs text-slate-500 mt-0.5 leading-5">Click any customer to open running ledger statement or send WhatsApp payment reminders.</p></div>
             <span className="self-start sm:self-auto text-xs font-bold text-blue-700 px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-100 shrink-0">{customers.length} Debtors</span>
@@ -88,7 +88,7 @@ export const MISDashboard: React.FC<MISDashboardProps> = ({ parties = [], salesI
           </div>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-md p-4 sm:p-5 space-y-4 flex flex-col justify-between min-w-0">
+        <div className="bg-white border border-slate-200 rounded-3xl shadow-[var(--shadow-soft)] p-4 sm:p-5 space-y-4 flex flex-col justify-between min-w-0">
           <div><h3 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">Receivables Aging Analysis</h3><p className="text-xs text-slate-500 mt-2 leading-relaxed">Aging breakdown of payment dues for liquidity risk assessment:</p>
             <div className="space-y-4 mt-4"><div><div className="flex justify-between gap-3 text-xs font-bold text-slate-700 mb-1"><span>0 - 30 Days (Current)</span><span className="text-emerald-600 shrink-0">₹88,146 (68%)</span></div><div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden"><div className="h-full bg-emerald-500 rounded-full" style={{ width: '68%' }} /></div></div><div><div className="flex justify-between gap-3 text-xs font-bold text-slate-700 mb-1"><span>30 - 60 Days</span><span className="text-amber-600 shrink-0">₹40,354 (32%)</span></div><div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden"><div className="h-full bg-amber-500 rounded-full" style={{ width: '32%' }} /></div></div><div><div className="flex justify-between gap-3 text-xs font-bold text-slate-700 mb-1"><span>60+ Days Overdue</span><span className="text-rose-600 shrink-0">₹0 (0%)</span></div><div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden"><div className="h-full bg-rose-500 rounded-full" style={{ width: '0%' }} /></div></div></div>
           </div>
