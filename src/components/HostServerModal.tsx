@@ -1,6 +1,6 @@
 import React from 'react';
 import type { HostServerStatus } from '../types/tax';
-import { X, Laptop, ShieldCheck, QrCode } from 'lucide-react';
+import { X, Laptop, ShieldCheck, Copy } from 'lucide-react';
 
 interface HostServerModalProps {
   status: HostServerStatus;
@@ -36,9 +36,9 @@ export const HostServerModal: React.FC<HostServerModalProps> = ({ status, onClos
           <label className="text-xs font-bold text-slate-700 block">Mobile Partner Pairing Token</label>
           <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-200 font-mono text-sm font-black text-blue-700 min-w-0">
             <span className="min-w-0 flex-1 break-all">{status.syncToken}</span>
-            <QrCode className="w-5 h-5 shrink-0 text-slate-500" />
+            <button type="button" onClick={() => navigator.clipboard.writeText(status.syncToken)} aria-label="Copy pairing token" title="Copy pairing token" className="min-h-10 min-w-10 rounded-xl flex items-center justify-center text-blue-600 hover:bg-blue-100 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"><Copy className="w-4 h-4" /></button>
           </div>
-          <p className="text-[11px] text-slate-500 leading-relaxed">Co-founders and partners can scan this QR code or enter token in their mobile app to pair with this PC host node.</p>
+          <p className="text-[11px] text-slate-500 leading-relaxed">Copy the pairing token and enter it in the partner mobile app. A scannable QR code is not available in this view.</p>
         </div>
 
         <div className="pt-1 sm:pt-2">
