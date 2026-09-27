@@ -9,7 +9,7 @@ export const Navbar: React.FC<NavbarProps> = ({ viewMode, setViewMode, onOpenOnb
   <header className={`sticky top-0 z-30 border-b border-slate-200/80 bg-white/85 backdrop-blur-xl px-3 sm:px-4 py-2.5 shadow-[0_4px_24px_rgba(15,23,42,0.05)] ${isMobileSimulator ? 'max-w-md w-full mx-auto rounded-t-3xl border-x-8 border-t-8 border-slate-900' : ''}`}>
     <div className="max-w-[1500px] mx-auto flex flex-wrap items-center justify-between gap-2 sm:gap-4">
       <div className="flex items-center gap-2.5 min-w-0 flex-1 sm:flex-none">
-        <div className="relative h-9 w-9 sm:h-10 sm:w-10 shrink-0 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/20 ring-1 ring-white/60">
+        <div className="relative h-9 w-9 sm:h-10 sm:w-10 shrink-0 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 flex items-center justify-center text-white shadow-[var(--shadow-soft)] shadow-blue-500/20 ring-1 ring-white/60">
           <Sparkles className="w-5 h-5 sm:w-6 sm:h-6" />
           <span className="absolute -right-0.5 -bottom-0.5 h-2.5 w-2.5 rounded-full bg-emerald-400 ring-2 ring-white" />
         </div>
@@ -36,19 +36,19 @@ export const Navbar: React.FC<NavbarProps> = ({ viewMode, setViewMode, onOpenOnb
           <span>•</span><span className="bg-white px-1.5 py-0.5 rounded border font-bold text-purple-700">F4</span> OCR
           <span>•</span><span className="bg-white px-1.5 py-0.5 rounded border font-bold text-emerald-700">F7</span> Bank
         </div>
-        <button onClick={onOpenOnboarding} className="group flex items-center gap-1.5 text-xs px-2.5 py-2 rounded-xl bg-white border border-slate-200 font-bold min-h-9 shadow-sm hover:border-blue-300 hover:bg-blue-50/60 hover:shadow-md">
+        <button onClick={onOpenOnboarding} className="group flex items-center gap-1.5 text-xs px-2.5 py-2 rounded-xl bg-white border border-slate-200 font-bold min-h-9 shadow-[var(--shadow-soft)] hover:border-blue-300 hover:bg-blue-50/60 hover:shadow-[var(--shadow-hover)] cursor-pointer">
           <Building2 className="w-3.5 h-3.5 text-blue-600 group-hover:scale-110 transition-transform" /><span className="hidden sm:inline">Switch / Setup Firm</span>
         </button>
-        <div className={`flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-2 rounded-xl border shadow-sm ${isBackendConnected ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`} title="C# ASP.NET Core 8 Web API Status">
+        <div className={`flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-2 rounded-xl border shadow-[var(--shadow-soft)] ${isBackendConnected ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`} title="C# ASP.NET Core 8 Web API Status">
           <span className={`h-2 w-2 rounded-full ${isBackendConnected ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
           <Server className="w-3.5 h-3.5" /><span className="hidden sm:inline font-mono">.NET 8 API</span>
         </div>
-        <button onClick={() => setIsMobileSimulator(!isMobileSimulator)} className={`flex items-center gap-1.5 text-xs px-2.5 py-2 rounded-xl border min-h-9 shadow-sm ${isMobileSimulator ? 'bg-purple-600 text-white border-purple-500 shadow-purple-500/20' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'}`} title="Toggle mobile simulator">
+        <button onClick={() => setIsMobileSimulator(!isMobileSimulator)} className={`flex items-center gap-1.5 text-xs px-2.5 py-2 rounded-xl border min-h-9 shadow-[var(--shadow-soft)] ${isMobileSimulator ? 'bg-purple-600 text-white border-purple-500 shadow-purple-500/20' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'}`} title="Toggle mobile simulator">
           <Smartphone className="w-3.5 h-3.5" /><span className="hidden sm:inline">{isMobileSimulator ? 'Exit Mobile' : 'Partner Mobile'}</span>
         </button>
         <div className="flex bg-slate-100/90 p-0.5 rounded-xl border border-slate-200 shadow-inner">
-          <button onClick={() => setViewMode('OPERATIONS')} className={`px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-extrabold min-h-8 ${viewMode === 'OPERATIONS' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-700'}`}>Operations</button>
-          <button onClick={() => setViewMode('CA_VIEW')} className={`px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-extrabold min-h-8 ${viewMode === 'CA_VIEW' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-700'}`}>CA Hub</button>
+          <button onClick={() => setViewMode('OPERATIONS')} className={`cursor-pointer px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-extrabold min-h-8 ${viewMode === 'OPERATIONS' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-700'}`}>Operations</button>
+          <button onClick={() => setViewMode('CA_VIEW')} className={`cursor-pointer px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-extrabold min-h-8 ${viewMode === 'CA_VIEW' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-700'}`}>CA Hub</button>
         </div>
       </div>
     </div>
