@@ -70,7 +70,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, unpos
                 <button onClick={() => id === 'PARTIES_MASTER' ? openPartyMaster() : setActiveTab(id)} aria-label={label} className={`w-full flex items-center justify-center gap-1 min-h-9 px-1 rounded-xl text-[9px] font-black ${activeTab === id ? 'text-blue-700 bg-blue-50' : 'text-slate-500 hover:bg-slate-50'}`}>
                   <Icon className="w-3.5 h-3.5 shrink-0" /><span className="truncate">{short[i + 5]}</span>{badge !== null && badge > 0 && <span className="text-[8px] rounded-full bg-rose-500 text-white px-1">{badge}</span>}
                 </button>
-                {id === 'PARTIES_MASTER' && <button type="button" onClick={openPartyMaster} className="absolute right-0 top-0.5 h-8 w-8 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-600/20" aria-label="Manage customers and vendors"><Settings className="w-3.5 h-3.5" /></button>}
+                {id === 'PARTIES_MASTER' && <button type="button" onClick={openPartyMaster} className="absolute right-0 top-0.5 h-8 w-8 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-[var(--shadow-soft)] shadow-blue-600/20" aria-label="Manage customers and vendors"><Settings className="w-3.5 h-3.5" /></button>}
               </div>
             ))}
           </div>
