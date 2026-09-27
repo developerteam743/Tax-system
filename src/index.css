@@ -105,6 +105,13 @@ main button {
 main button:not(:disabled):active { transform:translateY(1px); }
 main button:disabled { cursor:not-allowed; opacity:.6; }
 
+/* Keyboard focus is visible without changing the visual language for pointer users. */
+main button:focus-visible, nav button:focus-visible, aside button:focus-visible, header button:focus-visible, header input:focus-visible {
+  outline:2px solid rgba(37,99,235,.75);
+  outline-offset:2px;
+}
+main a:focus-visible { outline:2px solid rgba(37,99,235,.75); outline-offset:2px; border-radius:.5rem; }
+
 @keyframes fadeIn { from { opacity:0; transform:translateY(7px); } to { opacity:1; transform:translateY(0); } }
 @keyframes softPulse { 0%,100% { box-shadow:0 0 0 0 rgba(59,130,246,0); } 50% { box-shadow:0 0 0 5px rgba(59,130,246,.08); } }
 @keyframes shimmer { 0% { background-position:-700px 0; } 100% { background-position:700px 0; } }
