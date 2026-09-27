@@ -16,7 +16,7 @@ export const HostServerModal: React.FC<HostServerModalProps> = ({ status, onClos
             <Laptop className="w-5 h-5 shrink-0 text-blue-600" />
             <h3 className="text-base font-bold text-slate-900 leading-snug">CompuTax Host Node Status</h3>
           </div>
-          <button onClick={onClose} aria-label="Close host node controls" className="shrink-0 min-h-10 min-w-10 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer">
+          <button onClick={onClose} aria-label="Close host node controls" className="shrink-0 min-h-10 min-w-10 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -42,7 +42,7 @@ export const HostServerModal: React.FC<HostServerModalProps> = ({ status, onClos
         </div>
 
         <div className="pt-1 sm:pt-2">
-          <button onClick={onClose} className="w-full min-h-11 py-2.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-[var(--shadow-soft)] cursor-pointer transition-all">Close Node Controls</button>
+          <button onClick={onClose} className="w-full min-h-11 py-2.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-500 hover:-translate-y-0.5 text-white shadow-[var(--shadow-soft)] hover:shadow-[var(--shadow-hover)] cursor-pointer transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50">Close Node Controls</button>
         </div>
       </div>
     </div>
