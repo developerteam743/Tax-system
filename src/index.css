@@ -23,6 +23,15 @@
   --shadow-hover:0 12px 32px rgba(15,23,42,.10);
 }
 
+.dark {
+  --bg-main:#0b0f14;
+  --bg-card:#121824;
+  --border-card:#1e293b;
+  --border-soft:#1e293b;
+  --text-main:#f8fafc;
+  --text-muted:#94a3b8;
+}
+
 * { box-sizing:border-box; }
 html,body,#root { min-width:0; max-width:100%; width:100%; overflow-x:hidden; }
 html { scroll-behavior:smooth; }

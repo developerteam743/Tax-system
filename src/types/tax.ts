@@ -132,4 +132,45 @@ export interface HostServerStatus {
   syncToken: string;
 }
 
-export type ViewMode = 'OPERATIONS' | 'MARKETING_PARTNER' | 'CONSULTANT';
+export type ViewMode = 'OPERATIONS' | 'MARKETING_PARTNER' | 'CONSULTANT' | 'CA_VIEW';
+
+export interface GSTIssue {
+  id: string;
+  category: 'Critical' | 'Warning' | 'Information';
+  title: string;
+  invoiceNumber: string;
+  counterparty: string;
+  gstin?: string;
+  amount: number;
+  date: string;
+  reason: string;
+  suggestedAction: string;
+  status: 'OPEN' | 'RESOLVED' | 'IGNORED';
+}
+
+export interface ExpenseItem {
+  id: string;
+  expenseNumber: string;
+  date: string;
+  category: 'Rent' | 'Utilities' | 'Logistics & Freight' | 'Professional Fees' | 'Office & Supplies' | 'Travel & Food' | 'Repairs & Maintenance';
+  vendorName: string;
+  vendorGstin?: string;
+  taxableAmount: number;
+  gstRate: number;
+  cgstAmount: number;
+  sgstAmount: number;
+  igstAmount: number;
+  totalAmount: number;
+  itcEligibility: 'ELIGIBLE' | 'INELIGIBLE' | 'BLOCKED_17_5';
+  paymentMode: 'Bank Transfer' | 'UPI' | 'Credit Card' | 'Cash';
+  notes?: string;
+}
+
+export interface TallySyncLog {
+  id: string;
+  timestamp: string;
+  level: 'SUCCESS' | 'WARNING' | 'ERROR' | 'INFO';
+  module: 'MASTERS' | 'SALES' | 'PURCHASES' | 'DAYBOOK' | 'CONNECTION';
+  message: string;
+  details?: string;
+}

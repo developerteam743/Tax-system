@@ -25,35 +25,23 @@ if (fs.existsSync(clientPath)) {
   reactDomClientCjs = reactDomCjs;
 }
 
-const filesToBundle = [
-  'types/tax.ts',
-  'utils/gst.ts',
-  'utils/ocrEngine.ts',
-  'utils/bankMatcher.ts',
-  'utils/gstr1Exporter.ts',
-  'utils/tallyExporter.ts',
-  'data/initialData.ts',
-  'services/api.ts',
-  'components/Navbar.tsx',
-  'components/Sidebar.tsx',
-  'components/PartyMasterManager.tsx',
-  'components/MISDashboard.tsx',
-  'components/SalesBilling.tsx',
-  'components/EWayBillModule.tsx',
-  'components/AIPurchaseOCR.tsx',
-  'components/BankReconciliation.tsx',
-  'components/StockRegister.tsx',
-  'components/GSTR1Report.tsx',
-  'components/TallyExportModule.tsx',
-  'components/PartyLedgerModal.tsx',
-  'components/HostServerModal.tsx',
-  'components/OnboardingWizardModal.tsx',
-  'components/SampleBillModal.tsx',
-  'components/ScannedInvoiceReviewModal.tsx',
-  'components/Toast.tsx',
-  'App.tsx',
-  'main.tsx'
-];
+const lucidePath = path.join(ROOT_DIR, 'node_modules', 'lucide-react', 'dist', 'cjs', 'lucide-react.js');
+const lucideCjs = fs.existsSync(lucidePath) ? fs.readFileSync(lucidePath, 'utf-8') : '';
+
+function getFilesRecursively(dir, root = dir) {
+  let res = [];
+  for (const f of fs.readdirSync(dir)) {
+    const full = path.join(dir, f);
+    if (fs.statSync(full).isDirectory()) {
+      res = res.concat(getFilesRecursively(full, root));
+    } else if (/\.(tsx|ts)$/.test(f)) {
+      res.push(path.relative(root, full).replace(/\\/g, '/'));
+    }
+  }
+  return res;
+}
+
+const filesToBundle = getFilesRecursively(srcDir);
 
 let modules = {};
 
@@ -142,7 +130,7 @@ let bundle = `
       if (id === 'react/jsx-runtime' || id === 'react/jsx-dev-runtime') return jsxRuntimeProxy;
       if (id === 'react-dom') return ReactDOM;
       if (id === 'react-dom/client') return ReactDOMClient || ReactDOM;
-      if (id === 'lucide-react') return lucideProxy;
+      if (id === 'lucide-react') return LucideReact || lucideProxy;
       if (id === 'canvas-confetti') return window.confetti || function(){};
       if (id === 'xlsx') return window.XLSX || {};
 
@@ -186,6 +174,8 @@ let bundle = `
     windowGlobal.ReactDOM = ReactDOM;
     ${reactDomClientCjs}
   });
+
+  var LucideReact = ${lucideCjs ? `runCjsModule(function(exports, module, require) {\n${lucideCjs}\n})` : 'null'};
 
   windowGlobal.React = React;
   windowGlobal.ReactDOM = ReactDOM;

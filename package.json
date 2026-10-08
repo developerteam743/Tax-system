@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "node scripts/build.js && node scripts/serve.js",
     "build": "node scripts/build.js && node scripts/smokeTest.js",
+    "lint": "tsc --noEmit",
     "serve": "node scripts/serve.js",
     "test:smoke": "node scripts/smokeTest.js",
     "compiler:check": "node scripts/runReactCompilerDiagnostics.js"

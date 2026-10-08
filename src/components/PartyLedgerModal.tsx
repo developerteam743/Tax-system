@@ -48,7 +48,9 @@ export const PartyLedgerModal: React.FC<PartyLedgerModalProps> = ({ party, ledge
 
         <div className="space-y-3 min-w-0">
           <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Transaction Vouchers Log</h4>
-          <div className="bg-white/95 rounded-2xl border border-slate-200 overflow-x-auto shadow-[var(--shadow-soft)]">
+          
+          {/* DESKTOP TABLE */}
+          <div className="hidden md:block bg-white/95 rounded-2xl border border-slate-200 overflow-x-auto shadow-[var(--shadow-soft)]">
             <table className="w-full min-w-[620px] text-left text-xs text-slate-700">
               <thead className="bg-slate-50 text-slate-500 uppercase text-[10px] tracking-wider font-bold border-b border-slate-200">
                 <tr>
@@ -68,6 +70,31 @@ export const PartyLedgerModal: React.FC<PartyLedgerModalProps> = ({ party, ledge
                 ))}
               </tbody>
             </table>
+          </div>
+
+          {/* MOBILE CARDS */}
+          <div className="md:hidden space-y-2.5">
+            {ledgerEntries.map((entry) => (
+              <div key={entry.id} className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-slate-500 text-[11px]">{entry.date}</span>
+                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100">
+                    {entry.voucherType}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between font-mono">
+                  <span className="text-slate-600 text-[11px]">Voucher #{entry.voucherNo}</span>
+                  <div className="text-right">
+                    {entry.debit > 0 && <span className="font-bold text-emerald-600">+{formatCurrency(entry.debit)} Dr</span>}
+                    {entry.credit > 0 && <span className="font-bold text-amber-600">-{formatCurrency(entry.credit)} Cr</span>}
+                  </div>
+                </div>
+                <div className="flex items-center justify-between pt-1 border-t border-slate-200 text-[11px]">
+                  <span className="text-slate-500 font-medium">Balance</span>
+                  <span className="font-black text-slate-900">{formatCurrency(entry.balance)}</span>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 

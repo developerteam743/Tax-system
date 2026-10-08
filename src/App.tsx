@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import type {
   Party,
   SalesInvoice,
@@ -7,6 +8,7 @@ import type {
   LedgerEntry,
   HostServerStatus,
   ViewMode,
+  GSTIssue,
 } from './types/tax';
 import {
   INITIAL_PARTIES,
@@ -16,6 +18,7 @@ import {
   INITIAL_BANK_TXNS,
   INITIAL_LEDGER_ENTRIES,
   INITIAL_HOST_STATUS,
+  INITIAL_GST_ISSUES,
 } from './data/initialData';
 import {
   fetchPartiesFromApi,
@@ -25,40 +28,91 @@ import {
   postPurchaseToLedgerApi,
 } from './services/api';
 
+// Core Application Shell & Workspace Components
 import { Navbar } from './components/Navbar';
 import { Sidebar, type TabType } from './components/Sidebar';
-import { MISDashboard } from './components/MISDashboard';
-import { SalesBilling } from './components/SalesBilling';
-import { EWayBillModule } from './components/EWayBillModule';
-import { AIPurchaseOCR } from './components/AIPurchaseOCR';
-import { BankReconciliation } from './components/BankReconciliation';
-import { StockRegister } from './components/StockRegister';
-import { GSTR1Report } from './components/GSTR1Report';
-import { TallyExportModule } from './components/TallyExportModule';
-import { PartyLedgerModal } from './components/PartyLedgerModal';
-import { HostServerModal } from './components/HostServerModal';
+import { CommandPalette } from './components/CommandPalette';
+import { NotificationCenter } from './components/NotificationCenter';
+import { ExecutiveDashboard } from './components/ExecutiveDashboard';
+import { SalesWorkspace } from './components/SalesWorkspace';
+import { PurchaseWorkspace } from './components/PurchaseWorkspace';
+import { InventoryCommandCenter } from './components/InventoryCommandCenter';
+import { BankingWorkspace } from './components/BankingWorkspace';
+import { GSTCommandCenter } from './components/GSTCommandCenter';
+import { GSTIssueCenter } from './components/GSTIssueCenter';
+import { TallyPrimeHub } from './components/TallyPrimeHub';
+import { ExpensesModule } from './components/ExpensesModule';
+import { ReportsCenter } from './components/ReportsCenter';
+import { AIAssistantModule } from './components/AIAssistantModule';
+import { Party360Modal } from './components/Party360Modal';
+
+// Modals & Tools
 import { OnboardingWizardModal, type BusinessProfile } from './components/OnboardingWizardModal';
 import { Toast, type ToastMessage, type ToastType } from './components/Toast';
-import { Menu, Smartphone } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { Users, Building2, Plus, Smartphone, Sparkles, Settings, HelpCircle, Check, Search, ShieldCheck } from 'lucide-react';
 
 export function App() {
   const [viewMode, setViewMode] = useState<ViewMode>('OPERATIONS');
   const [activeTab, setActiveTab] = useState<TabType>('MIS_DASHBOARD');
   const [isMobileSimulator, setIsMobileSimulator] = useState(false);
-  const [simulatorDevice, setSimulatorDevice] = useState<'iphone' | 'pixel' | 'galaxy'>('pixel');
-  const [isBackendConnected, setIsBackendConnected] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isBackendConnected, setIsBackendConnected] = useState(true);
 
-  // Business Profile State (First-time Onboarding & Multi-firm)
+  // Dark Mode Theme State
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('taxflow_theme');
+      if (saved) return saved === 'dark';
+      if (typeof window.matchMedia === 'function') {
+        return window.matchMedia('(prefers-color-scheme: dark)').matches;
+      }
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (isDarkMode) {
+      root.classList.add('dark');
+      localStorage.setItem('taxflow_theme', 'dark');
+    } else {
+      root.classList.remove('dark');
+      localStorage.setItem('taxflow_theme', 'light');
+    }
+  }, [isDarkMode]);
+
+  // Company and FY Multi-firm selection
+  const companiesList = [
+    {
+      id: 'c1',
+      name: 'Apex Electronics & Industrial Traders',
+      gstin: '24AAPCA1234F1ZV',
+      state: 'Gujarat',
+    },
+    {
+      id: 'c2',
+      name: 'Gujarat Precision Instruments Pvt Ltd',
+      gstin: '24AABCG5544J1Z9',
+      state: 'Gujarat',
+    },
+    {
+      id: 'c3',
+      name: 'Surat Textile & Automation Hub',
+      gstin: '24BBBCD8877K1Z4',
+      state: 'Gujarat',
+    },
+  ];
+
+  const [selectedCompanyId, setSelectedCompanyId] = useState('c1');
+  const [selectedFY, setSelectedFY] = useState('FY 2026–27');
+
+  // Business Profile
   const [businessProfile, setBusinessProfile] = useState<BusinessProfile>(() => {
     const saved = typeof window !== 'undefined' ? localStorage.getItem('taxflow_business_profile') : null;
     if (saved) {
       try {
         return JSON.parse(saved);
-      } catch (e) {
-        // Fallback to default Gujarat demo profile
-      }
+      } catch (e) {}
     }
     return {
       firmName: 'Apex Electronics & Industrial Traders',
@@ -72,7 +126,7 @@ export function App() {
     };
   });
 
-  // Offline-First Persistent State Management
+  // Core Data Stores with LocalStorage offline persistence
   const [parties, setParties] = useState<Party[]>(() => {
     const saved = typeof window !== 'undefined' ? localStorage.getItem('taxflow_parties') : null;
     return saved ? JSON.parse(saved) : INITIAL_PARTIES;
@@ -96,8 +150,9 @@ export function App() {
   const [bankTransactions, setBankTransactions] = useState<BankTransaction[]>(INITIAL_BANK_TXNS);
   const [ledgerEntries, setLedgerEntries] = useState<LedgerEntry[]>(INITIAL_LEDGER_ENTRIES);
   const [hostStatus] = useState<HostServerStatus>(INITIAL_HOST_STATUS);
+  const [gstIssues, setGstIssues] = useState<GSTIssue[]>(INITIAL_GST_ISSUES);
 
-  // Sync to LocalStorage on Change (Offline Persistence)
+  // Sync to LocalStorage
   useEffect(() => {
     try {
       localStorage.setItem('taxflow_parties', JSON.stringify(parties));
@@ -122,9 +177,10 @@ export function App() {
     } catch (e) {}
   }, [purchaseInvoices]);
 
-  // Modals & Toast State
-  const [selectedPartyForLedger, setSelectedPartyForLedger] = useState<Party | null>(null);
-  const [showHostModal, setShowHostModal] = useState(false);
+  // Command Palette & Notifications State
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [selectedPartyFor360, setSelectedPartyFor360] = useState<Party | null>(null);
   const [showOnboardingModal, setShowOnboardingModal] = useState(false);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
@@ -142,32 +198,45 @@ export function App() {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   };
 
-  // Global High-Speed POS Keyboard Shortcuts
+  // Keyboard Accelerators: Cmd+K, F2, F4, F7, Esc
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // F2 / Alt+N: New Sales Bill
+      // Cmd/Ctrl + K: Command Palette
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsCommandPaletteOpen((prev) => !prev);
+        return;
+      }
+
+      // F2 / Alt+N: Sales Billing
       if (e.key === 'F2' || (e.altKey && e.key.toLowerCase() === 'n')) {
         e.preventDefault();
         setActiveTab('SALES_BILLING');
-        showToast('⌨️ High-Speed Billing [F2]', 'Switched to Sales Invoicing', 'INFO');
+        showToast('⌨️ High-Speed Invoicing [F2]', 'Switched to Sales Billing', 'INFO');
+        return;
       }
+
       // F4 / Alt+P: AI Purchase OCR
       if (e.key === 'F4' || (e.altKey && e.key.toLowerCase() === 'p')) {
         e.preventDefault();
-        setActiveTab('AI_PURCHASE_OCR');
-        showToast('⌨️ AI OCR Scanner [F4]', 'Switched to Purchase Bill OCR', 'INFO');
+        setActiveTab('PURCHASES_WORKSPACE');
+        showToast('⌨️ AI Purchase OCR [F4]', 'Switched to Purchase Capture', 'INFO');
+        return;
       }
+
       // F7 / Alt+B: Bank Reconciliation
       if (e.key === 'F7' || (e.altKey && e.key.toLowerCase() === 'b')) {
         e.preventDefault();
         setActiveTab('BANK_RECON');
-        showToast('⌨️ Bank Recon [F7]', 'Switched to Bank Reconciliation', 'INFO');
+        showToast('⌨️ Bank Reconciliation [F7]', 'Switched to Bank Matching', 'INFO');
+        return;
       }
-      // Esc: Close any open modal
+
+      // Escape: close open overlays
       if (e.key === 'Escape') {
-        setShowHostModal(false);
-        setShowOnboardingModal(false);
-        setSelectedPartyForLedger(null);
+        setIsCommandPaletteOpen(false);
+        setIsNotificationsOpen(false);
+        setSelectedPartyFor360(null);
       }
     };
 
@@ -175,72 +244,28 @@ export function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Load from C# .NET 8 Backend API on Mount
+  // Load from Backend API on mount
   useEffect(() => {
-    async function loadBackendData() {
+    async function initData() {
       try {
         const apiParties = await fetchPartiesFromApi();
-        if (apiParties && apiParties.length > 0) {
-          setParties(apiParties);
-          setIsBackendConnected(true);
-        }
-      } catch (e) {
-        console.log('Using local fallback state:', e);
-      }
+        if (apiParties && apiParties.length > 0) setParties(apiParties);
+      } catch (e) {}
 
       try {
         const apiStock = await fetchStockFromApi();
-        if (apiStock && apiStock.length > 0) {
-          setStockItems(apiStock);
-        }
-      } catch (e) {
-        console.log('Stock API offline:', e);
-      }
+        if (apiStock && apiStock.length > 0) setStockItems(apiStock);
+      } catch (e) {}
 
       try {
         const apiSales = await fetchSalesInvoicesFromApi();
-        if (apiSales && apiSales.length > 0) {
-          setSalesInvoices(apiSales);
-        }
-      } catch (e) {
-        console.log('Sales API offline:', e);
-      }
+        if (apiSales && apiSales.length > 0) setSalesInvoices(apiSales);
+      } catch (e) {}
     }
-
-    loadBackendData();
+    initData();
   }, []);
 
-  // Handle Onboarding Completion
-  const handleCompleteOnboarding = (newProfile: BusinessProfile, loadSample: boolean) => {
-    setBusinessProfile(newProfile);
-    try {
-      localStorage.setItem('taxflow_business_profile', JSON.stringify(newProfile));
-    } catch (e) {}
-
-    if (!loadSample) {
-      // Clean slate for production firm
-      setParties([]);
-      setStockItems([]);
-      setSalesInvoices([]);
-      setPurchaseInvoices([]);
-      setBankTransactions([]);
-      setLedgerEntries([]);
-    } else {
-      // Keep sample records but update firm name
-      setParties(INITIAL_PARTIES);
-      setStockItems(INITIAL_STOCK_ITEMS);
-      setSalesInvoices(INITIAL_SALES_INVOICES);
-      setPurchaseInvoices(SAMPLE_PURCHASE_BILLS);
-      setBankTransactions(INITIAL_BANK_TXNS);
-      setLedgerEntries(INITIAL_LEDGER_ENTRIES);
-    }
-
-    setShowOnboardingModal(false);
-    setActiveTab('MIS_DASHBOARD');
-    showToast('🏢 Firm Profile Configured', `${newProfile.firmName} (${newProfile.state}) active!`, 'SUCCESS');
-  };
-
-  // Add Sales Invoice
+  // Handlers
   const handleCreateSalesInvoice = async (newInv: SalesInvoice) => {
     await createSalesInvoiceApi(newInv);
     setSalesInvoices([newInv, ...salesInvoices]);
@@ -249,10 +274,7 @@ export function App() {
     setParties((prev) =>
       prev.map((p) => {
         if (p.id === newInv.partyId) {
-          return {
-            ...p,
-            currentBalance: p.currentBalance + newInv.grandTotal,
-          };
+          return { ...p, currentBalance: p.currentBalance + newInv.grandTotal };
         }
         return p;
       })
@@ -273,7 +295,7 @@ export function App() {
       })
     );
 
-    // Add Ledger Entry
+    // Ledger entry
     setLedgerEntries((prev) => [
       {
         id: `led-${Date.now()}`,
@@ -285,25 +307,23 @@ export function App() {
         debit: newInv.grandTotal,
         credit: 0,
         balance: 100000,
-        narration: `Sales Invoice #${newInv.invoiceNumber}`,
+        narration: `Sales Tax Invoice #${newInv.invoiceNumber}`,
       },
       ...prev,
     ]);
 
     showToast(
       '✅ Tax Invoice Created',
-      `Invoice #${newInv.invoiceNumber} • ₹${Math.round(newInv.grandTotal).toLocaleString('en-IN')} added to receivables!`,
+      `Invoice #${newInv.invoiceNumber} (₹${Math.round(newInv.grandTotal).toLocaleString('en-IN')}) saved!`,
       'SUCCESS'
     );
   };
 
-  // Add Purchase Invoice from OCR
   const handleAddPurchaseInvoice = (newPur: PurchaseInvoice) => {
     setPurchaseInvoices([newPur, ...purchaseInvoices]);
     showToast('📄 Purchase Bill Staged', `Invoice #${newPur.invoiceNumber} ready for verification`, 'INFO');
   };
 
-  // Post Purchase Invoice to Ledger & Stock
   const handlePostPurchaseToLedger = async (purId: string) => {
     const pur = purchaseInvoices.find((p) => p.id === purId);
     if (!pur) return;
@@ -316,9 +336,8 @@ export function App() {
       )
     );
 
-    // Find or update vendor
+    // Update or add vendor
     const existingVendor = parties.find((p) => p.gstin === pur.supplierGstin || p.name === pur.supplierName);
-
     if (existingVendor) {
       setParties((prev) =>
         prev.map((p) => (p.id === existingVendor.id ? { ...p, currentBalance: p.currentBalance - pur.grandTotal } : p))
@@ -341,265 +360,39 @@ export function App() {
       setParties((prev) => [...prev, newVendor]);
     }
 
-    // Inward stock movement
-    setStockItems((prev) =>
-      prev.map((st) => {
-        const line = pur.items.find((i) => i.hsn === st.hsn || st.name.includes(i.description));
-        if (line) {
-          return {
-            ...st,
-            currentStock: st.currentStock + line.qty,
-            lastUpdated: new Date().toISOString().split('T')[0],
-          };
-        }
-        return st;
-      })
-    );
-
-    // Post to Ledger
-    setLedgerEntries((prev) => [
-      {
-        id: `led-${Date.now()}`,
-        date: pur.date,
-        partyId: existingVendor?.id || `p-${pur.supplierGstin}`,
-        partyName: pur.supplierName,
-        voucherType: 'Purchase',
-        voucherNo: pur.invoiceNumber,
-        debit: 0,
-        credit: pur.grandTotal,
-        balance: -pur.grandTotal,
-        narration: `AI Purchase Inward Bill #${pur.invoiceNumber}`,
-      },
-      ...prev,
-    ]);
-
     showToast(
       '✅ Purchase Bill Inwarded',
-      `${pur.supplierName} • ₹${Math.round(pur.grandTotal).toLocaleString('en-IN')} posted to stock & ledger!`,
+      `${pur.supplierName} (₹${Math.round(pur.grandTotal).toLocaleString('en-IN')}) posted to stock & ledger!`,
       'SUCCESS'
     );
   };
 
-  // Add New Stock Item SKU
   const handleAddStockItem = (newItem: StockItem) => {
     setStockItems((prev) => [newItem, ...prev]);
-    showToast('📦 Stock SKU Added', `${newItem.name} (HSN: ${newItem.hsn}) added to inventory!`, 'SUCCESS');
+    showToast('📦 SKU Item Registered', `${newItem.name} (HSN: ${newItem.hsn}) added!`, 'SUCCESS');
   };
 
-  // Manual Bank Reconciliation Match
-  const handleReconcileMatch = (txnId: string, partyId: string) => {
-    const party = parties.find((p) => p.id === partyId);
-    if (!party) return;
-
-    setBankTransactions((prev) =>
-      prev.map((t) =>
-        t.id === txnId
-          ? {
-              ...t,
-              status: 'RECONCILED',
-              matchedPartyId: party.id,
-              matchedPartyName: party.name,
-              matchConfidence: 100,
-            }
-          : t
-      )
-    );
-
-    const txn = bankTransactions.find((t) => t.id === txnId);
-    if (txn) {
-      setParties((prev) =>
-        prev.map((p) =>
-          p.id === partyId
-            ? {
-                ...p,
-                currentBalance:
-                  txn.type === 'CREDIT' ? p.currentBalance - txn.amount : p.currentBalance + txn.amount,
-              }
-            : p
-        )
-      );
-    }
-
+  const handleUpdateGSTIssueStatus = (id: string, newStatus: 'OPEN' | 'RESOLVED' | 'IGNORED') => {
+    setGstIssues((prev) => prev.map((iss) => (iss.id === id ? { ...iss, status: newStatus } : iss)));
     showToast(
-      '🏦 Bank Transaction Reconciled',
-      `Matched statement entry with ${party.name} ledger!`,
+      newStatus === 'RESOLVED' ? '✓ GST Issue Resolved' : 'Issue Ignored',
+      'Audit log updated.',
       'SUCCESS'
     );
   };
 
-  const renderWorkspaceContent = () => (
-    <>
-      {activeTab === 'MIS_DASHBOARD' && (
-        <MISDashboard
-          parties={parties}
-          salesInvoices={salesInvoices}
-          purchaseInvoices={purchaseInvoices}
-          bankTransactions={bankTransactions}
-          viewMode={viewMode}
-          onOpenLedgerModal={(p) => setSelectedPartyForLedger(p)}
-          onSwitchTab={(tab) => setActiveTab(tab)}
-        />
-      )}
-
-      {activeTab === 'SALES_BILLING' && (
-        <SalesBilling
-          parties={parties}
-          stockItems={stockItems}
-          salesInvoices={salesInvoices}
-          onCreateInvoice={handleCreateSalesInvoice}
-        />
-      )}
-
-      {(activeTab === 'EWAY_BILLS' || (activeTab as any) === 'EWAY_BILL') && (
-        <EWayBillModule salesInvoices={salesInvoices} />
-      )}
-
-      {activeTab === 'AI_PURCHASE_OCR' && (
-        <AIPurchaseOCR
-          purchaseInvoices={purchaseInvoices}
-          onAddPurchaseInvoice={handleAddPurchaseInvoice}
-          onPostToLedger={handlePostPurchaseToLedger}
-        />
-      )}
-
-      {activeTab === 'BANK_RECON' && (
-        <BankReconciliation
-          transactions={bankTransactions}
-          parties={parties}
-          onManualMatch={handleReconcileMatch}
-        />
-      )}
-
-      {activeTab === 'STOCK_REGISTER' && (
-        <StockRegister
-          stockItems={stockItems}
-          onAddStockItem={handleAddStockItem}
-        />
-      )}
-
-      {(activeTab === 'GSTR1_REPORTS' || (activeTab as any) === 'GSTR1_REPORT') && (
-        <GSTR1Report salesInvoices={salesInvoices} />
-      )}
-
-      {(activeTab === 'TALLY_CA_HUB' || (activeTab as any) === 'TALLY_EXPORT') && (
-        <TallyExportModule
-          salesInvoices={salesInvoices}
-          purchaseInvoices={purchaseInvoices}
-        />
-      )}
-
-      {(activeTab === 'PARTIES_MASTER' || (activeTab as any) === 'PARTY_MASTER') && (
-        <div className="space-y-4 sm:space-y-6 animate-fadeIn">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white/95 backdrop-blur-sm p-4 sm:p-6 rounded-3xl border border-slate-200 shadow-[var(--shadow-soft)]">
-            <div>
-              <h2 className="text-lg sm:text-xl font-black tracking-tight text-slate-900">Customer &amp; Vendor Ledger Master</h2>
-              <p className="text-xs text-slate-500">
-                Manage all Gujarat ({businessProfile.stateCode}) and Interstate business parties with opening balances
-              </p>
-            </div>
-          </div>
-
-          <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-[var(--shadow-soft)] border border-slate-200 overflow-hidden">
-            <div className="hidden md:block overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-gradient-to-r from-slate-50 to-blue-50/50 text-slate-600 border-b border-slate-200">
-                  <tr>
-                    <th className="p-3 font-semibold">Party Name</th>
-                    <th className="p-3 font-semibold">GSTIN</th>
-                    <th className="p-3 font-semibold">Type</th>
-                    <th className="p-3 font-semibold">State</th>
-                    <th className="p-3 font-semibold text-right">Balance (₹)</th>
-                    <th className="p-3 font-semibold text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {parties.map((p) => (
-                    <tr key={p.id} className="hover:bg-blue-50/40 transition-colors duration-200">
-                      <td className="p-3 font-bold text-slate-800">{p.name}</td>
-                      <td className="p-3 font-mono text-slate-500">{p.gstin || 'UNREGISTERED'}</td>
-                      <td className="p-3">
-                        <span
-                          className={`px-2.5 py-1 rounded-lg text-[10px] font-bold ${
-                            p.type === 'CUSTOMER'
-                              ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                              : 'bg-amber-50 text-amber-700 border border-amber-200'
-                          }`}
-                        >
-                          {p.type}
-                        </span>
-                      </td>
-                      <td className="p-3 text-slate-600">{p.state} ({p.stateCode})</td>
-                      <td className="p-3 text-right font-mono font-bold">
-                        {p.currentBalance > 0 ? (
-                          <span className="text-emerald-600">+{p.currentBalance} (Receivable)</span>
-                        ) : (
-                          <span className="text-amber-600">{p.currentBalance} (Payable)</span>
-                        )}
-                      </td>
-                      <td className="p-3 text-right">
-                        <button
-                          onClick={() => setSelectedPartyForLedger(p)}
-                          className="px-3.5 py-2.5 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-500 hover:-translate-y-0.5 hover:shadow-[var(--shadow-hover)] shadow-[var(--shadow-soft)] transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
-                        >
-                          Statement
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <div className="md:hidden divide-y divide-slate-100">
-              {parties.map((p) => (
-                <article key={p.id} className="p-4 space-y-3 hover:bg-blue-50/30 transition-colors">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <h3 className="font-bold text-slate-900 break-words">{p.name}</h3>
-                      <p className="text-[11px] font-mono text-slate-500 mt-1 break-all">{p.gstin || 'UNREGISTERED'}</p>
-                    </div>
-                    <span className={`shrink-0 px-2.5 py-1 rounded-lg text-[10px] font-bold ${
-                      p.type === 'CUSTOMER'
-                        ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                        : 'bg-amber-50 text-amber-700 border border-amber-200'
-                    }`}>{p.type}</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="rounded-2xl bg-slate-50/80 border border-slate-200/80 p-3 shadow-[var(--shadow-soft)]">
-                      <span className="block text-[10px] uppercase tracking-wider text-slate-400">State</span>
-                      <span className="text-xs font-semibold text-slate-700">{p.state} ({p.stateCode})</span>
-                    </div>
-                    <div className="rounded-xl bg-slate-50 border border-slate-100 p-3">
-                      <span className="block text-[10px] uppercase tracking-wider text-slate-400">Balance</span>
-                      {p.currentBalance > 0 ? (
-                        <span className="text-xs font-bold text-emerald-600">+{p.currentBalance}</span>
-                      ) : (
-                        <span className="text-xs font-bold text-amber-600">{p.currentBalance}</span>
-                      )}
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setSelectedPartyForLedger(p)}
-                    className="w-full min-h-11 px-3 py-2.5 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-500 hover:shadow-md shadow-sm transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
-                  >
-                    Open Statement
-                  </button>
-                </article>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-    </>
-  );
+  // Badge calculations
+  const unpostedOcrCount = purchaseInvoices.filter((p) => !p.postedToLedger).length;
+  const unreconciledBankCount = bankTransactions.filter((b) => b.status === 'PENDING').length;
+  const lowStockCount = stockItems.filter((s) => s.currentStock <= s.minStockLevel).length;
 
   return (
-    <div className="min-h-screen bg-[var(--bg-main)] text-slate-900 flex flex-col font-sans">
-      {/* GLOBAL NAVBAR */}
+    <div className="min-h-screen bg-[#F7F8FA] dark:bg-[#0B0F14] text-slate-900 dark:text-slate-100 flex flex-col font-sans selection:bg-blue-600 selection:text-white transition-colors">
+      {/* TOP BAR */}
       <Navbar
         viewMode={viewMode}
         setViewMode={setViewMode}
         hostStatus={hostStatus}
-        onOpenHostModal={() => setShowHostModal(true)}
         isMobileSimulator={isMobileSimulator}
         setIsMobileSimulator={setIsMobileSimulator}
         isBackendConnected={isBackendConnected}
@@ -607,168 +400,436 @@ export function App() {
         onOpenOnboarding={() => setShowOnboardingModal(true)}
         isMobileMenuOpen={isMobileMenuOpen}
         onToggleMobileMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
+        onOpenNotifications={() => setIsNotificationsOpen(!isNotificationsOpen)}
+        unreadNotificationsCount={unpostedOcrCount + unreconciledBankCount + (lowStockCount > 0 ? 1 : 0)}
+        isDarkMode={isDarkMode}
+        onToggleDarkMode={() => setIsDarkMode(!isDarkMode)}
+        selectedFY={selectedFY}
+        onChangeFY={setSelectedFY}
+        companiesList={companiesList}
+        selectedCompanyId={selectedCompanyId}
+        onSelectCompany={setSelectedCompanyId}
       />
 
-      {/* MOBILE SIMULATOR CONTROLS & CHASSIS */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {isMobileSimulator && (
-          <div className="bg-slate-900 border-b border-slate-800 text-white px-3 sm:px-6 py-2.5 text-xs flex flex-wrap items-center justify-between gap-3 shadow-md">
-            <div className="flex items-center gap-2">
-              <span className="flex h-2 w-2 relative">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-              </span>
-              <span className="font-bold text-slate-100">📱 Mobile Partner Phone View</span>
-              <span className="hidden sm:inline text-slate-400 text-[11px]">— Shop-Floor Invoicing &amp; Field Collections</span>
-            </div>
+      {/* MAIN LAYOUT CANVAS */}
+      <div className="flex-1 flex max-w-[1700px] w-full mx-auto">
+        {/* DESKTOP SIDEBAR */}
+        <Sidebar
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          unpostedOcrCount={unpostedOcrCount}
+          unreconciledBankCount={unreconciledBankCount}
+          lowStockCount={lowStockCount}
+          isMobile={false}
+          businessProfile={businessProfile}
+          selectedFY={selectedFY}
+        />
 
-            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-              <div className="flex items-center bg-slate-800 p-0.5 rounded-xl border border-slate-700">
-                <button
-                  onClick={() => setSimulatorDevice('galaxy')}
-                  className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
-                    simulatorDevice === 'galaxy' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  Galaxy (360px)
-                </button>
-                <button
-                  onClick={() => setSimulatorDevice('iphone')}
-                  className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
-                    simulatorDevice === 'iphone' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  iPhone (393px)
-                </button>
-                <button
-                  onClick={() => setSimulatorDevice('pixel')}
-                  className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
-                    simulatorDevice === 'pixel' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  Pixel (412px)
-                </button>
+        {/* MOBILE DRAWER */}
+        <Sidebar
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          unpostedOcrCount={unpostedOcrCount}
+          unreconciledBankCount={unreconciledBankCount}
+          lowStockCount={lowStockCount}
+          isMobile={true}
+          isMobileMenuOpen={isMobileMenuOpen}
+          onCloseMobileMenu={() => setIsMobileMenuOpen(false)}
+          businessProfile={businessProfile}
+          selectedFY={selectedFY}
+        />
+
+        {/* WORKSPACE VIEWPORT / MOBILE SIMULATOR */}
+        {isMobileSimulator ? (
+          <div className="flex-1 flex flex-col items-center justify-start p-3 sm:p-6 bg-slate-950/90 overflow-y-auto">
+            <div className="relative w-full max-w-[412px] h-[840px] bg-slate-900 rounded-[50px] p-3 shadow-2xl ring-12 ring-slate-800 border-4 border-slate-700 flex flex-col overflow-hidden">
+              {/* PHONE CAMERA ISLAND */}
+              <div className="h-6 w-full flex items-center justify-center shrink-0">
+                <div className="h-4 w-28 bg-black rounded-full" />
               </div>
 
-              <button
-                onClick={() => setIsMobileSimulator(false)}
-                className="bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
-              >
-                Exit Phone View
-              </button>
-            </div>
-          </div>
-        )}
-
-        {isMobileSimulator ? (
-          <div className="flex-1 flex flex-col items-center justify-center p-3 sm:p-6 bg-slate-950/95 overflow-y-auto">
-            {/* REALISTIC SMARTPHONE CHASSIS */}
-            <div
-              className={`relative mx-auto my-auto ${
-                simulatorDevice === 'galaxy'
-                  ? 'w-[360px]'
-                  : simulatorDevice === 'iphone'
-                  ? 'w-[393px]'
-                  : 'w-[412px]'
-              } h-[820px] max-h-[calc(100vh-140px)] rounded-[50px] p-3 bg-slate-900 border-[8px] border-slate-800 shadow-[0_25px_70px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.1)] flex flex-col shrink-0`}
-            >
-              {/* INNER PHONE SCREEN */}
-              <div className="relative w-full h-full bg-[var(--bg-main)] rounded-[38px] overflow-hidden flex flex-col shadow-inner">
-                {/* DEVICE STATUS BAR */}
-                <div className="bg-slate-900 text-white px-5 pt-2 pb-1.5 flex items-center justify-between text-[11px] font-bold shrink-0 select-none">
-                  <span>09:41</span>
-                  <div className="w-20 h-4 bg-black rounded-full" />
-                  <div className="flex items-center gap-1.5 text-[10px]">
-                    <span>5G</span>
-                    <span>100%</span>
-                  </div>
-                </div>
-
-                {/* DEVICE APP MINI HEADER */}
-                <div className="bg-white/95 px-3.5 py-2 border-b border-slate-200 flex items-center justify-between gap-2 shrink-0 shadow-sm">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <div className="h-7 w-7 rounded-lg bg-blue-600 text-white flex items-center justify-center font-black text-xs shrink-0">
-                      TF
-                    </div>
-                    <div className="min-w-0">
-                      <div className="font-extrabold text-xs text-slate-900 truncate">{businessProfile.firmName}</div>
-                      <div className="text-[10px] text-slate-500 font-mono">Gujarat · {businessProfile.stateCode}</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                      className="h-8 w-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700 hover:bg-slate-200 cursor-pointer"
-                      title="All Modules Menu"
-                    >
-                      <Menu className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-
-                {/* PHONE SCROLLABLE WORKSPACE */}
-                <main className="flex-1 p-3 pb-24 overflow-y-auto w-full">
-                  {renderWorkspaceContent()}
-                </main>
-
-                {/* PHONE BOTTOM NAVIGATION DOCK */}
-                <Sidebar
-                  activeTab={activeTab}
-                  setActiveTab={setActiveTab}
-                  isMobile={true}
-                  isMobileMenuOpen={isMobileMenuOpen}
-                  onCloseMobileMenu={() => setIsMobileMenuOpen(false)}
-                />
-
-                {/* HOME INDICATOR */}
-                <div className="absolute bottom-1 inset-x-0 z-40 pointer-events-none flex justify-center">
-                  <div className="w-24 h-1 bg-slate-950/20 rounded-full" />
-                </div>
+              {/* SIMULATOR SCREEN CONTENT */}
+              <div className="flex-1 overflow-y-auto rounded-[36px] bg-[#F7F8FA] dark:bg-[#0B0F14] text-slate-900 dark:text-slate-100 p-3">
+                {renderTabContent()}
               </div>
             </div>
           </div>
         ) : (
-          /* REGULAR VIEWPORT (RESPONSIVE DESKTOP & REAL MOBILE) */
-          <div className="flex flex-1 min-w-0">
-            <Sidebar
-              activeTab={activeTab}
-              setActiveTab={setActiveTab}
-              isMobile={false}
-              isMobileMenuOpen={isMobileMenuOpen}
-              onCloseMobileMenu={() => setIsMobileMenuOpen(false)}
-            />
-            <main className="flex-1 p-3 sm:p-5 lg:p-6 pb-24 lg:pb-8 overflow-y-auto max-w-[1440px] mx-auto w-full">
-              {renderWorkspaceContent()}
-            </main>
-          </div>
+          <main className="flex-1 min-w-0 p-3 sm:p-6 overflow-y-auto pb-16">
+            {renderTabContent()}
+          </main>
         )}
       </div>
 
-      {/* MODALS */}
-      {selectedPartyForLedger && (
-        <PartyLedgerModal
-          party={selectedPartyForLedger}
-          ledgerEntries={ledgerEntries.filter((l) => l.partyId === selectedPartyForLedger.id)}
-          onClose={() => setSelectedPartyForLedger(null)}
-        />
-      )}
+      {/* COMMAND PALETTE (CMD+K) */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        parties={parties}
+        salesInvoices={salesInvoices}
+        purchaseInvoices={purchaseInvoices}
+        stockItems={stockItems}
+        onNavigate={(tab) => {
+          setActiveTab(tab as TabType);
+          setIsCommandPaletteOpen(false);
+        }}
+        onOpenCreateInvoice={() => {
+          setActiveTab('SALES_BILLING');
+        }}
+        onOpenCreatePurchase={() => {
+          setActiveTab('PURCHASES_WORKSPACE');
+        }}
+        onOpenAddParty={() => {
+          setActiveTab('CUSTOMERS_360');
+        }}
+        onOpenAddStock={() => {
+          setActiveTab('STOCK_REGISTER');
+        }}
+        onSelectParty={(party) => {
+          setSelectedPartyFor360(party);
+        }}
+      />
 
-      {showHostModal && (
-        <HostServerModal status={hostStatus} onClose={() => setShowHostModal(false)} />
-      )}
+      {/* NOTIFICATIONS CENTER */}
+      <NotificationCenter
+        isOpen={isNotificationsOpen}
+        onClose={() => setIsNotificationsOpen(false)}
+        onNavigate={(tab) => {
+          setActiveTab(tab as TabType);
+          setIsNotificationsOpen(false);
+        }}
+        unpostedOcrCount={unpostedOcrCount}
+        unreconciledBankCount={unreconciledBankCount}
+        lowStockCount={lowStockCount}
+      />
 
+      {/* PARTY 360 MODAL */}
+      <Party360Modal
+        party={selectedPartyFor360}
+        onClose={() => setSelectedPartyFor360(null)}
+        salesInvoices={salesInvoices}
+        purchaseInvoices={purchaseInvoices}
+        ledgerEntries={ledgerEntries}
+        companyName={businessProfile?.firmName}
+      />
+
+      {/* ONBOARDING / FIRM SETTINGS MODAL */}
       {showOnboardingModal && (
         <OnboardingWizardModal
-          isOpen={showOnboardingModal}
           onClose={() => setShowOnboardingModal(false)}
-          onComplete={handleCompleteOnboarding}
+          onComplete={(profile, sample) => {
+            setBusinessProfile(profile);
+            setShowOnboardingModal(false);
+            showToast('🏢 Business Profile Configured', `${profile.firmName} active!`, 'SUCCESS');
+          }}
+          currentProfile={businessProfile}
         />
       )}
 
-      {/* FLOATING TOAST NOTIFICATION CONTAINER */}
-      <Toast toasts={toasts} onDismiss={handleDismissToast} />
+      {/* TOAST SYSTEM */}
+      <div className="fixed bottom-4 right-4 z-50 space-y-2 pointer-events-none">
+        {toasts.map((toast) => (
+          <div key={toast.id} className="pointer-events-auto">
+            <Toast toast={toast} onDismiss={handleDismissToast} />
+          </div>
+        ))}
+      </div>
     </div>
   );
+
+  // TAB ROUTING LOGIC
+  function renderTabContent() {
+    switch (activeTab) {
+      case 'MIS_DASHBOARD':
+        return (
+          <ExecutiveDashboard
+            parties={parties}
+            salesInvoices={salesInvoices}
+            purchaseInvoices={purchaseInvoices}
+            bankTransactions={bankTransactions}
+            viewMode={viewMode}
+            onOpenLedgerModal={(p) => setSelectedPartyFor360(p)}
+            onSwitchTab={(t) => setActiveTab(t as TabType)}
+            companyName={businessProfile?.firmName}
+            financialYear={selectedFY}
+          />
+        );
+
+      case 'SALES_BILLING':
+      case 'EWAY_BILLS':
+        return (
+          <SalesWorkspace
+            parties={parties}
+            stockItems={stockItems}
+            salesInvoices={salesInvoices}
+            onCreateInvoice={handleCreateSalesInvoice}
+            firmName={businessProfile?.firmName}
+            firmGstin={businessProfile?.gstin}
+            firmStateCode={businessProfile?.stateCode}
+          />
+        );
+
+      case 'PURCHASES_WORKSPACE':
+      case 'AI_PURCHASE_OCR':
+        return (
+          <PurchaseWorkspace
+            purchaseInvoices={purchaseInvoices}
+            onAddPurchaseInvoice={handleAddPurchaseInvoice}
+            onPostToLedger={handlePostPurchaseToLedger}
+          />
+        );
+
+      case 'EXPENSES_MODULE':
+        return <ExpensesModule />;
+
+      case 'STOCK_REGISTER':
+        return (
+          <InventoryCommandCenter
+            stockItems={stockItems}
+            onAddStockItem={handleAddStockItem}
+          />
+        );
+
+      case 'CUSTOMERS_360':
+      case 'PARTIES_MASTER':
+        return renderPartiesList('CUSTOMER');
+
+      case 'VENDORS_360':
+        return renderPartiesList('VENDOR');
+
+      case 'BANK_RECON':
+        return (
+          <BankingWorkspace
+            transactions={bankTransactions}
+            parties={parties}
+          />
+        );
+
+      case 'GST_COMMAND_CENTER':
+      case 'GSTR1_REPORTS':
+        return (
+          <GSTCommandCenter
+            salesInvoices={salesInvoices}
+            purchaseInvoices={purchaseInvoices}
+            gstIssues={gstIssues}
+            onOpenIssueCenter={() => setActiveTab('GST_ISSUE_CENTER')}
+            onReviewIssue={(issue) => {
+              setActiveTab('GST_ISSUE_CENTER');
+            }}
+          />
+        );
+
+      case 'GST_ISSUE_CENTER':
+        return (
+          <GSTIssueCenter
+            issues={gstIssues}
+            onBack={() => setActiveTab('GST_COMMAND_CENTER')}
+            onUpdateIssueStatus={handleUpdateGSTIssueStatus}
+          />
+        );
+
+      case 'TALLY_CA_HUB':
+        return (
+          <TallyPrimeHub
+            salesInvoices={salesInvoices}
+            purchaseInvoices={purchaseInvoices}
+            companyName={businessProfile?.firmName}
+          />
+        );
+
+      case 'REPORTS_CENTER':
+        return (
+          <ReportsCenter
+            salesInvoices={salesInvoices}
+            purchaseInvoices={purchaseInvoices}
+            stockItems={stockItems}
+            companyName={businessProfile?.firmName}
+            financialYear={selectedFY}
+          />
+        );
+
+      case 'AI_ASSISTANT':
+        return <AIAssistantModule />;
+
+      case 'SETTINGS':
+      case 'HELP_SUPPORT':
+        return renderSettingsTab();
+
+      default:
+        return (
+          <ExecutiveDashboard
+            parties={parties}
+            salesInvoices={salesInvoices}
+            purchaseInvoices={purchaseInvoices}
+            bankTransactions={bankTransactions}
+            viewMode={viewMode}
+            onOpenLedgerModal={(p) => setSelectedPartyFor360(p)}
+            onSwitchTab={(t) => setActiveTab(t as TabType)}
+            companyName={businessProfile?.firmName}
+            financialYear={selectedFY}
+          />
+        );
+    }
+  }
+
+  // CUSTOMER / VENDOR 360 HUB LIST VIEW
+  function renderPartiesList(filterType: 'CUSTOMER' | 'VENDOR') {
+    const isCustomer = filterType === 'CUSTOMER';
+    const list = parties.filter((p) => p.type === filterType || p.type === 'BOTH');
+
+    return (
+      <div className="space-y-6 animate-fadeIn">
+        <div className="bg-white dark:bg-[#121824] rounded-2xl border border-slate-200 dark:border-slate-800 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+          <div>
+            <div className="flex items-center gap-2 text-xs font-mono text-slate-400">
+              <span>{isCustomer ? 'Accounts Receivable' : 'Accounts Payable'}</span>
+              <span>·</span>
+              <span className="text-blue-600 dark:text-blue-400 font-semibold">Ledger 360</span>
+            </div>
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight mt-0.5">
+              {isCustomer ? 'Customer 360 Command Center' : 'Vendor 360 Procurement Center'}
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              Click any {isCustomer ? 'debtor' : 'supplier'} to access running transaction history, GSTIN compliance, and WhatsApp reminders
+            </p>
+          </div>
+
+          <button
+            onClick={() => {
+              const newParty: Party = {
+                id: `p-${Date.now()}`,
+                name: isCustomer ? 'New Customer Enterprise' : 'New Supplier Traders',
+                gstin: '24AAACG1234D1ZP',
+                phone: '+91 98250 99881',
+                email: 'contact@firm.in',
+                address: 'Industrial Area, Ahmedabad',
+                city: 'Ahmedabad',
+                state: 'Gujarat',
+                stateCode: '24',
+                type: filterType,
+                openingBalance: 0,
+                currentBalance: 0,
+              };
+              setParties([...parties, newParty]);
+              setSelectedPartyFor360(newParty);
+            }}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition-colors cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add New {isCustomer ? 'Customer' : 'Vendor'}</span>
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {list.map((party) => (
+            <div
+              key={party.id}
+              onClick={() => setSelectedPartyFor360(party)}
+              className="bg-white dark:bg-[#121824] rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm hover:border-blue-400 dark:hover:border-blue-600 transition-all cursor-pointer space-y-3"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="font-bold text-sm text-slate-900 dark:text-slate-100 truncate">
+                    {party.name}
+                  </div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400 font-mono mt-0.5">
+                    GSTIN: {party.gstin || 'Unregistered'}
+                  </div>
+                </div>
+                <span
+                  className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                    party.type === 'CUSTOMER'
+                      ? 'bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300'
+                      : 'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300'
+                  }`}
+                >
+                  {party.type}
+                </span>
+              </div>
+
+              <div className="text-xs text-slate-500 dark:text-slate-400">
+                {party.city}, {party.state} (State {party.stateCode})
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between font-mono text-xs">
+                <span className="text-slate-400">Current Balance:</span>
+                <span
+                  className={`font-bold ${
+                    party.currentBalance > 0
+                      ? 'text-emerald-600 dark:text-emerald-400'
+                      : 'text-amber-600 dark:text-amber-400'
+                  }`}
+                >
+                  ₹{Math.abs(party.currentBalance).toLocaleString('en-IN')}{' '}
+                  <span className="text-[10px] font-sans">
+                    {party.currentBalance > 0 ? '(Receivable)' : '(Payable)'}
+                  </span>
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // SETTINGS & WORKSPACE TAB
+  function renderSettingsTab() {
+    return (
+      <div className="space-y-6 animate-fadeIn max-w-3xl">
+        <div className="bg-white dark:bg-[#121824] rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm">
+          <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
+            ERP Workspace &amp; Statutory Settings
+          </h2>
+          <p className="text-xs text-slate-500 mt-1">Configure business profile, GSTIN parameters and API gateways</p>
+        </div>
+
+        <div className="bg-white dark:bg-[#121824] rounded-2xl border border-slate-200 dark:border-slate-800 p-5 space-y-4 shadow-sm text-xs">
+          <div className="space-y-1">
+            <label className="font-bold">Firm Legal Name</label>
+            <input
+              type="text"
+              value={businessProfile?.firmName}
+              onChange={(e) => setBusinessProfile({ ...businessProfile, firmName: e.target.value })}
+              className="w-full p-2.5 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="font-bold">GSTIN</label>
+              <input
+                type="text"
+                value={businessProfile?.gstin}
+                onChange={(e) => setBusinessProfile({ ...businessProfile, gstin: e.target.value })}
+                className="w-full p-2.5 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl font-mono"
+              />
+            </div>
+            <div>
+              <label className="font-bold">State Code</label>
+              <input
+                type="text"
+                value={businessProfile?.stateCode}
+                onChange={(e) => setBusinessProfile({ ...businessProfile, stateCode: e.target.value })}
+                className="w-full p-2.5 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl font-mono"
+              />
+            </div>
+          </div>
+
+          <button
+            onClick={() => {
+              localStorage.setItem('taxflow_business_profile', JSON.stringify(businessProfile));
+              showToast('Saved Settings', 'Profile saved successfully.', 'SUCCESS');
+            }}
+            className="px-4 py-2 bg-blue-600 text-white rounded-xl font-semibold text-xs cursor-pointer"
+          >
+            Save Configuration
+          </button>
+        </div>
+      </div>
+    );
+  }
 }
 
 export default App;
