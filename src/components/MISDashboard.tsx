@@ -76,15 +76,45 @@ export const MISDashboard: React.FC<MISDashboardProps> = ({ parties = [], salesI
 
           <div className="hidden md:block overflow-x-auto rounded-2xl border border-slate-200/80 shadow-[var(--shadow-soft)] overflow-hidden"><table className="w-full min-w-[680px] text-left text-xs text-slate-700">
             <thead className="bg-slate-50 text-slate-500 uppercase text-[10px] tracking-wider font-bold border-b border-slate-200"><tr><th className="p-3">Customer Name</th><th className="p-3">GSTIN</th><th className="p-3">State</th><th className="p-3">Receivable (₹)</th><th className="p-3 text-right">Actions</th></tr></thead>
-            <tbody className="divide-y divide-slate-100">{customers.map((c) => <tr key={c.id} className="hover:bg-blue-50/60 transition-colors duration-200"><td className="p-3 font-bold text-slate-900 break-words">{c.name}</td><td className="p-3 font-mono text-slate-500 break-all">{c.gstin}</td><td className="p-3 font-mono text-blue-600">{c.stateCode}-{c.state}</td><td className="p-3 font-black text-emerald-600 text-sm">{formatINR(c.currentBalance)}</td><td className="p-3 text-right"><div className="flex items-center justify-end gap-2"><button onClick={() => onOpenLedgerModal(c)} className="min-h-10 px-2.5 py-1.5 rounded-xl bg-slate-100 text-slate-700 font-semibold hover:bg-slate-200 hover:-translate-y-0.5 hover:shadow-[var(--shadow-soft)] text-[11px] cursor-pointer transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/50">Ledger</button><button onClick={() => { const text = `Hi ${c.name}, your payment balance of ${formatINR(c.currentBalance)} is due. Kindly process the payment. Thanks!`; window.open(`https://wa.me/${c.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(text)}`, '_blank'); }} className="min-h-10 px-2.5 py-1.5 rounded-xl bg-emerald-600 text-white font-semibold hover:bg-emerald-500 hover:-translate-y-0.5 hover:shadow-[var(--shadow-hover)] text-[11px] flex items-center gap-1 cursor-pointer shadow-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"><Send className="w-3 h-3" /> WhatsApp</button></div></td></tr>)}</tbody>
+            <tbody className="divide-y divide-slate-100">{customers.map((c) => {
+              const text = `Hi ${c.name}, your payment balance of ${formatINR(c.currentBalance)} is due. Kindly process the payment. Thanks!`;
+              const waUrl = `https://wa.me/${c.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(text)}`;
+              return (
+                <tr key={c.id} className="hover:bg-blue-50/60 transition-colors duration-200">
+                  <td className="p-3 font-bold text-slate-900 break-words">{c.name}</td>
+                  <td className="p-3 font-mono text-slate-500 break-all">{c.gstin}</td>
+                  <td className="p-3 font-mono text-blue-600">{c.stateCode}-{c.state}</td>
+                  <td className="p-3 font-black text-emerald-600 text-sm">{formatINR(c.currentBalance)}</td>
+                  <td className="p-3 text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <button onClick={() => onOpenLedgerModal(c)} className="min-h-10 px-2.5 py-1.5 rounded-xl bg-slate-100 text-slate-700 font-semibold hover:bg-slate-200 hover:-translate-y-0.5 hover:shadow-[var(--shadow-soft)] text-[11px] cursor-pointer transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/50">Ledger</button>
+                      <a href={waUrl} target="_blank" rel="noopener noreferrer" className="min-h-10 px-2.5 py-1.5 rounded-xl bg-emerald-600 text-white font-semibold hover:bg-emerald-500 hover:-translate-y-0.5 hover:shadow-[var(--shadow-hover)] text-[11px] flex items-center gap-1 cursor-pointer shadow-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50">
+                        <Send className="w-3 h-3" /> WhatsApp
+                      </a>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}</tbody>
           </table></div>
 
           <div className="md:hidden space-y-3">
-            {customers.length === 0 ? <div className="text-center text-xs text-slate-400 py-6">No customer ledgers available.</div> : customers.map((c) => <div key={c.id} className="rounded-2xl border border-slate-200 bg-white/80 shadow-[var(--shadow-soft)] hover:-translate-y-0.5 hover:shadow-[var(--shadow-hover)] transition-all duration-200 p-3.5 space-y-3">
-              <div className="flex items-start justify-between gap-3"><div className="min-w-0"><div className="font-bold text-sm text-slate-900 break-words">{c.name}</div><div className="text-[11px] font-mono text-slate-500 break-all mt-1">{c.gstin || 'No GSTIN'}</div></div><div className="text-right shrink-0"><div className="text-[10px] uppercase text-slate-400 font-bold">Receivable</div><div className="text-sm font-black text-emerald-600">{formatINR(c.currentBalance)}</div></div></div>
-              <div className="text-[11px] font-mono text-blue-600">{c.stateCode}-{c.state}</div>
-              <div className="grid grid-cols-2 gap-2"><button onClick={() => onOpenLedgerModal(c)} className="min-h-11 px-2 rounded-xl bg-white border border-slate-200 text-slate-700 font-semibold text-[11px] hover:bg-slate-50 hover:-translate-y-0.5 hover:shadow-[var(--shadow-soft)] transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/50">Ledger</button><button onClick={() => { const text = `Hi ${c.name}, your payment balance of ${formatINR(c.currentBalance)} is due. Kindly process the payment. Thanks!`; window.open(`https://wa.me/${c.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(text)}`, '_blank'); }} className="min-h-11 px-2 rounded-xl bg-emerald-600 text-white font-semibold text-[11px] flex items-center justify-center gap-1 hover:bg-emerald-500 hover:-translate-y-0.5 hover:shadow-[var(--shadow-hover)] transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"><Send className="w-3 h-3" /> WhatsApp</button></div>
-            </div>)}
+            {customers.length === 0 ? <div className="text-center text-xs text-slate-400 py-6">No customer ledgers available.</div> : customers.map((c) => {
+              const text = `Hi ${c.name}, your payment balance of ${formatINR(c.currentBalance)} is due. Kindly process the payment. Thanks!`;
+              const waUrl = `https://wa.me/${c.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(text)}`;
+              return (
+                <div key={c.id} className="rounded-2xl border border-slate-200 bg-white/80 shadow-[var(--shadow-soft)] hover:-translate-y-0.5 hover:shadow-[var(--shadow-hover)] transition-all duration-200 p-3.5 space-y-3">
+                  <div className="flex items-start justify-between gap-3"><div className="min-w-0"><div className="font-bold text-sm text-slate-900 break-words">{c.name}</div><div className="text-[11px] font-mono text-slate-500 break-all mt-1">{c.gstin || 'No GSTIN'}</div></div><div className="text-right shrink-0"><div className="text-[10px] uppercase text-slate-400 font-bold">Receivable</div><div className="text-sm font-black text-emerald-600">{formatINR(c.currentBalance)}</div></div></div>
+                  <div className="text-[11px] font-mono text-blue-600">{c.stateCode}-{c.state}</div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button onClick={() => onOpenLedgerModal(c)} className="min-h-11 px-2 rounded-xl bg-white border border-slate-200 text-slate-700 font-semibold text-[11px] hover:bg-slate-50 hover:-translate-y-0.5 hover:shadow-[var(--shadow-soft)] transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/50">Ledger</button>
+                    <a href={waUrl} target="_blank" rel="noopener noreferrer" className="min-h-11 px-2 rounded-xl bg-emerald-600 text-white font-semibold text-[11px] flex items-center justify-center gap-1 hover:bg-emerald-500 hover:-translate-y-0.5 hover:shadow-[var(--shadow-hover)] transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50">
+                      <Send className="w-3 h-3" /> WhatsApp
+                    </a>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 

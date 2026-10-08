@@ -15,7 +15,7 @@ const html = `<!doctype html><html><head></head><body><div id="root"></div></bod
 const dom = new JSDOM(html, {
   runScripts: 'dangerously',
   resources: 'usable',
-  url: 'http://localhost:5174/',
+  url: 'http://localhost:3000/',
 });
 
 const errors = [];

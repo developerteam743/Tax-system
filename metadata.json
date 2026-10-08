@@ -1,0 +1,8 @@
+{
+  "name": "TaxFlow AI - Gujarat MSME Taxation & ERP",
+  "description": "Smart MSME Billing, AI Purchase OCR, Bank Matcher, Tally & GSTR-1 ERP Engine",
+  "permissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

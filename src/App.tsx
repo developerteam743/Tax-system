@@ -39,13 +39,16 @@ import { PartyLedgerModal } from './components/PartyLedgerModal';
 import { HostServerModal } from './components/HostServerModal';
 import { OnboardingWizardModal, type BusinessProfile } from './components/OnboardingWizardModal';
 import { Toast, type ToastMessage, type ToastType } from './components/Toast';
+import { Menu, Smartphone } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 export function App() {
   const [viewMode, setViewMode] = useState<ViewMode>('OPERATIONS');
   const [activeTab, setActiveTab] = useState<TabType>('MIS_DASHBOARD');
   const [isMobileSimulator, setIsMobileSimulator] = useState(false);
+  const [simulatorDevice, setSimulatorDevice] = useState<'iphone' | 'pixel' | 'galaxy'>('pixel');
   const [isBackendConnected, setIsBackendConnected] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Business Profile State (First-time Onboarding & Multi-firm)
   const [businessProfile, setBusinessProfile] = useState<BusinessProfile>(() => {
@@ -424,6 +427,171 @@ export function App() {
     );
   };
 
+  const renderWorkspaceContent = () => (
+    <>
+      {activeTab === 'MIS_DASHBOARD' && (
+        <MISDashboard
+          parties={parties}
+          salesInvoices={salesInvoices}
+          purchaseInvoices={purchaseInvoices}
+          bankTransactions={bankTransactions}
+          viewMode={viewMode}
+          onOpenLedgerModal={(p) => setSelectedPartyForLedger(p)}
+          onSwitchTab={(tab) => setActiveTab(tab)}
+        />
+      )}
+
+      {activeTab === 'SALES_BILLING' && (
+        <SalesBilling
+          parties={parties}
+          stockItems={stockItems}
+          salesInvoices={salesInvoices}
+          onCreateInvoice={handleCreateSalesInvoice}
+        />
+      )}
+
+      {(activeTab === 'EWAY_BILLS' || (activeTab as any) === 'EWAY_BILL') && (
+        <EWayBillModule salesInvoices={salesInvoices} />
+      )}
+
+      {activeTab === 'AI_PURCHASE_OCR' && (
+        <AIPurchaseOCR
+          purchaseInvoices={purchaseInvoices}
+          onAddPurchaseInvoice={handleAddPurchaseInvoice}
+          onPostToLedger={handlePostPurchaseToLedger}
+        />
+      )}
+
+      {activeTab === 'BANK_RECON' && (
+        <BankReconciliation
+          transactions={bankTransactions}
+          parties={parties}
+          onManualMatch={handleReconcileMatch}
+        />
+      )}
+
+      {activeTab === 'STOCK_REGISTER' && (
+        <StockRegister
+          stockItems={stockItems}
+          onAddStockItem={handleAddStockItem}
+        />
+      )}
+
+      {(activeTab === 'GSTR1_REPORTS' || (activeTab as any) === 'GSTR1_REPORT') && (
+        <GSTR1Report salesInvoices={salesInvoices} />
+      )}
+
+      {(activeTab === 'TALLY_CA_HUB' || (activeTab as any) === 'TALLY_EXPORT') && (
+        <TallyExportModule
+          salesInvoices={salesInvoices}
+          purchaseInvoices={purchaseInvoices}
+        />
+      )}
+
+      {(activeTab === 'PARTIES_MASTER' || (activeTab as any) === 'PARTY_MASTER') && (
+        <div className="space-y-4 sm:space-y-6 animate-fadeIn">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white/95 backdrop-blur-sm p-4 sm:p-6 rounded-3xl border border-slate-200 shadow-[var(--shadow-soft)]">
+            <div>
+              <h2 className="text-lg sm:text-xl font-black tracking-tight text-slate-900">Customer &amp; Vendor Ledger Master</h2>
+              <p className="text-xs text-slate-500">
+                Manage all Gujarat ({businessProfile.stateCode}) and Interstate business parties with opening balances
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-[var(--shadow-soft)] border border-slate-200 overflow-hidden">
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-gradient-to-r from-slate-50 to-blue-50/50 text-slate-600 border-b border-slate-200">
+                  <tr>
+                    <th className="p-3 font-semibold">Party Name</th>
+                    <th className="p-3 font-semibold">GSTIN</th>
+                    <th className="p-3 font-semibold">Type</th>
+                    <th className="p-3 font-semibold">State</th>
+                    <th className="p-3 font-semibold text-right">Balance (₹)</th>
+                    <th className="p-3 font-semibold text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {parties.map((p) => (
+                    <tr key={p.id} className="hover:bg-blue-50/40 transition-colors duration-200">
+                      <td className="p-3 font-bold text-slate-800">{p.name}</td>
+                      <td className="p-3 font-mono text-slate-500">{p.gstin || 'UNREGISTERED'}</td>
+                      <td className="p-3">
+                        <span
+                          className={`px-2.5 py-1 rounded-lg text-[10px] font-bold ${
+                            p.type === 'CUSTOMER'
+                              ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                              : 'bg-amber-50 text-amber-700 border border-amber-200'
+                          }`}
+                        >
+                          {p.type}
+                        </span>
+                      </td>
+                      <td className="p-3 text-slate-600">{p.state} ({p.stateCode})</td>
+                      <td className="p-3 text-right font-mono font-bold">
+                        {p.currentBalance > 0 ? (
+                          <span className="text-emerald-600">+{p.currentBalance} (Receivable)</span>
+                        ) : (
+                          <span className="text-amber-600">{p.currentBalance} (Payable)</span>
+                        )}
+                      </td>
+                      <td className="p-3 text-right">
+                        <button
+                          onClick={() => setSelectedPartyForLedger(p)}
+                          className="px-3.5 py-2.5 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-500 hover:-translate-y-0.5 hover:shadow-[var(--shadow-hover)] shadow-[var(--shadow-soft)] transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                        >
+                          Statement
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="md:hidden divide-y divide-slate-100">
+              {parties.map((p) => (
+                <article key={p.id} className="p-4 space-y-3 hover:bg-blue-50/30 transition-colors">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <h3 className="font-bold text-slate-900 break-words">{p.name}</h3>
+                      <p className="text-[11px] font-mono text-slate-500 mt-1 break-all">{p.gstin || 'UNREGISTERED'}</p>
+                    </div>
+                    <span className={`shrink-0 px-2.5 py-1 rounded-lg text-[10px] font-bold ${
+                      p.type === 'CUSTOMER'
+                        ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                        : 'bg-amber-50 text-amber-700 border border-amber-200'
+                    }`}>{p.type}</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="rounded-2xl bg-slate-50/80 border border-slate-200/80 p-3 shadow-[var(--shadow-soft)]">
+                      <span className="block text-[10px] uppercase tracking-wider text-slate-400">State</span>
+                      <span className="text-xs font-semibold text-slate-700">{p.state} ({p.stateCode})</span>
+                    </div>
+                    <div className="rounded-xl bg-slate-50 border border-slate-100 p-3">
+                      <span className="block text-[10px] uppercase tracking-wider text-slate-400">Balance</span>
+                      {p.currentBalance > 0 ? (
+                        <span className="text-xs font-bold text-emerald-600">+{p.currentBalance}</span>
+                      ) : (
+                        <span className="text-xs font-bold text-amber-600">{p.currentBalance}</span>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setSelectedPartyForLedger(p)}
+                    className="w-full min-h-11 px-3 py-2.5 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-500 hover:shadow-md shadow-sm transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                  >
+                    Open Statement
+                  </button>
+                </article>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+
   return (
     <div className="min-h-screen bg-[var(--bg-main)] text-slate-900 flex flex-col font-sans">
       {/* GLOBAL NAVBAR */}
@@ -437,196 +605,143 @@ export function App() {
         isBackendConnected={isBackendConnected}
         businessProfile={businessProfile}
         onOpenOnboarding={() => setShowOnboardingModal(true)}
+        isMobileMenuOpen={isMobileMenuOpen}
+        onToggleMobileMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
       />
 
-      {/* MOBILE SIMULATOR WRAPPER */}
-      <div className="flex-1 flex flex-col">
+      {/* MOBILE SIMULATOR CONTROLS & CHASSIS */}
+      <div className="flex-1 flex flex-col min-w-0">
         {isMobileSimulator && (
-          <div className="bg-gradient-to-r from-slate-950 via-indigo-950 to-purple-950 text-white px-3 sm:px-4 py-2.5 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-[var(--shadow-soft)]">
-            <span className="font-semibold flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping"></span>
-              📱 Mobile Partner Simulator Active — Testing Shop-Floor Mobile View
-            </span>
-            <div className="flex items-center gap-3">
-              <span className="hidden lg:inline text-[11px] text-purple-200">Local Wi-Fi: http://192.168.29.128:5174/</span>
+          <div className="bg-slate-900 border-b border-slate-800 text-white px-3 sm:px-6 py-2.5 text-xs flex flex-wrap items-center justify-between gap-3 shadow-md">
+            <div className="flex items-center gap-2">
+              <span className="flex h-2 w-2 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <span className="font-bold text-slate-100">📱 Mobile Partner Phone View</span>
+              <span className="hidden sm:inline text-slate-400 text-[11px]">— Shop-Floor Invoicing &amp; Field Collections</span>
+            </div>
+
+            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+              <div className="flex items-center bg-slate-800 p-0.5 rounded-xl border border-slate-700">
+                <button
+                  onClick={() => setSimulatorDevice('galaxy')}
+                  className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                    simulatorDevice === 'galaxy' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  Galaxy (360px)
+                </button>
+                <button
+                  onClick={() => setSimulatorDevice('iphone')}
+                  className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                    simulatorDevice === 'iphone' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  iPhone (393px)
+                </button>
+                <button
+                  onClick={() => setSimulatorDevice('pixel')}
+                  className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                    simulatorDevice === 'pixel' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  Pixel (412px)
+                </button>
+              </div>
+
               <button
                 onClick={() => setIsMobileSimulator(false)}
-                className="bg-white/10 hover:bg-white/20 hover:-translate-y-0.5 border border-white/10 px-3 py-2 rounded-xl text-[11px] font-bold transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 min-h-10"
+                className="bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
               >
-                Exit Simulator
+                Exit Phone View
               </button>
             </div>
           </div>
         )}
 
-        <div className={`flex flex-1 ${isMobileSimulator ? 'max-w-md mx-auto my-6 border-8 border-slate-900 rounded-3xl shadow-[var(--shadow-hover)] overflow-hidden bg-[var(--bg-main)] min-h-[780px]' : ''}`}>
-          {/* SIDEBAR NAVIGATION */}
-          <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} isMobile={isMobileSimulator} />
-
-          {/* MAIN WORKSPACE CONTENT */}
-          <main className="flex-1 p-3 sm:p-5 lg:p-6 overflow-y-auto max-w-[1440px] mx-auto w-full">
-            {activeTab === 'MIS_DASHBOARD' && (
-              <MISDashboard
-                parties={parties}
-                salesInvoices={salesInvoices}
-                purchaseInvoices={purchaseInvoices}
-                bankTransactions={bankTransactions}
-                viewMode={viewMode}
-                onOpenLedgerModal={(p) => setSelectedPartyForLedger(p)}
-                onSwitchTab={(tab) => setActiveTab(tab)}
-              />
-            )}
-
-            {activeTab === 'SALES_BILLING' && (
-              <SalesBilling
-                parties={parties}
-                stockItems={stockItems}
-                salesInvoices={salesInvoices}
-                onCreateInvoice={handleCreateSalesInvoice}
-              />
-            )}
-
-            {(activeTab === 'EWAY_BILLS' || (activeTab as any) === 'EWAY_BILL') && (
-              <EWayBillModule salesInvoices={salesInvoices} />
-            )}
-
-            {activeTab === 'AI_PURCHASE_OCR' && (
-              <AIPurchaseOCR
-                purchaseInvoices={purchaseInvoices}
-                onAddPurchaseInvoice={handleAddPurchaseInvoice}
-                onPostToLedger={handlePostPurchaseToLedger}
-              />
-            )}
-
-            {activeTab === 'BANK_RECON' && (
-              <BankReconciliation
-                transactions={bankTransactions}
-                parties={parties}
-                onManualMatch={handleReconcileMatch}
-              />
-            )}
-
-            {activeTab === 'STOCK_REGISTER' && (
-              <StockRegister
-                stockItems={stockItems}
-                onAddStockItem={handleAddStockItem}
-              />
-            )}
-
-            {(activeTab === 'GSTR1_REPORTS' || (activeTab as any) === 'GSTR1_REPORT') && (
-              <GSTR1Report salesInvoices={salesInvoices} />
-            )}
-
-            {(activeTab === 'TALLY_CA_HUB' || (activeTab as any) === 'TALLY_EXPORT') && (
-              <TallyExportModule
-                salesInvoices={salesInvoices}
-                purchaseInvoices={purchaseInvoices}
-              />
-            )}
-
-            {(activeTab === 'PARTIES_MASTER' || (activeTab as any) === 'PARTY_MASTER') && (
-              <div className="space-y-5 sm:space-y-6 animate-fadeIn">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white/95 backdrop-blur-sm p-4 sm:p-6 rounded-3xl border border-slate-200 shadow-[var(--shadow-soft)]">
-                  <div>
-                    <h2 className="text-lg sm:text-xl font-black tracking-tight text-slate-900">Customer &amp; Vendor Ledger Master</h2>
-                    <p className="text-xs text-slate-500">
-                      Manage all Gujarat ({businessProfile.stateCode}) and Interstate business parties with opening balances
-                    </p>
+        {isMobileSimulator ? (
+          <div className="flex-1 flex flex-col items-center justify-center p-3 sm:p-6 bg-slate-950/95 overflow-y-auto">
+            {/* REALISTIC SMARTPHONE CHASSIS */}
+            <div
+              className={`relative mx-auto my-auto ${
+                simulatorDevice === 'galaxy'
+                  ? 'w-[360px]'
+                  : simulatorDevice === 'iphone'
+                  ? 'w-[393px]'
+                  : 'w-[412px]'
+              } h-[820px] max-h-[calc(100vh-140px)] rounded-[50px] p-3 bg-slate-900 border-[8px] border-slate-800 shadow-[0_25px_70px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.1)] flex flex-col shrink-0`}
+            >
+              {/* INNER PHONE SCREEN */}
+              <div className="relative w-full h-full bg-[var(--bg-main)] rounded-[38px] overflow-hidden flex flex-col shadow-inner">
+                {/* DEVICE STATUS BAR */}
+                <div className="bg-slate-900 text-white px-5 pt-2 pb-1.5 flex items-center justify-between text-[11px] font-bold shrink-0 select-none">
+                  <span>09:41</span>
+                  <div className="w-20 h-4 bg-black rounded-full" />
+                  <div className="flex items-center gap-1.5 text-[10px]">
+                    <span>5G</span>
+                    <span>100%</span>
                   </div>
                 </div>
 
-                <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-[var(--shadow-soft)] border border-slate-200 overflow-hidden">
-                  <div className="hidden md:block overflow-x-auto">
-                    <table className="w-full text-left text-xs">
-                      <thead className="bg-gradient-to-r from-slate-50 to-blue-50/50 text-slate-600 border-b border-slate-200">
-                        <tr>
-                          <th className="p-3 font-semibold">Party Name</th>
-                          <th className="p-3 font-semibold">GSTIN</th>
-                          <th className="p-3 font-semibold">Type</th>
-                          <th className="p-3 font-semibold">State</th>
-                          <th className="p-3 font-semibold text-right">Balance (₹)</th>
-                          <th className="p-3 font-semibold text-right">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
-                        {parties.map((p) => (
-                          <tr key={p.id} className="hover:bg-blue-50/40 transition-colors duration-200">
-                            <td className="p-3 font-bold text-slate-800">{p.name}</td>
-                            <td className="p-3 font-mono text-slate-500">{p.gstin || 'UNREGISTERED'}</td>
-                            <td className="p-3">
-                              <span
-                                className={`px-2.5 py-1 rounded-lg text-[10px] font-bold ${
-                                  p.type === 'CUSTOMER'
-                                    ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                                    : 'bg-amber-50 text-amber-700 border border-amber-200'
-                                }`}
-                              >
-                                {p.type}
-                              </span>
-                            </td>
-                            <td className="p-3 text-slate-600">{p.state} ({p.stateCode})</td>
-                            <td className="p-3 text-right font-mono font-bold">
-                              {p.currentBalance > 0 ? (
-                                <span className="text-emerald-600">+{p.currentBalance} (Receivable)</span>
-                              ) : (
-                                <span className="text-amber-600">{p.currentBalance} (Payable)</span>
-                              )}
-                            </td>
-                            <td className="p-3 text-right">
-                              <button
-                                onClick={() => setSelectedPartyForLedger(p)}
-                                className="px-3.5 py-2.5 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-500 hover:-translate-y-0.5 hover:shadow-[var(--shadow-hover)] shadow-[var(--shadow-soft)] transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
-                              >
-                                Statement
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                {/* DEVICE APP MINI HEADER */}
+                <div className="bg-white/95 px-3.5 py-2 border-b border-slate-200 flex items-center justify-between gap-2 shrink-0 shadow-sm">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="h-7 w-7 rounded-lg bg-blue-600 text-white flex items-center justify-center font-black text-xs shrink-0">
+                      TF
+                    </div>
+                    <div className="min-w-0">
+                      <div className="font-extrabold text-xs text-slate-900 truncate">{businessProfile.firmName}</div>
+                      <div className="text-[10px] text-slate-500 font-mono">Gujarat · {businessProfile.stateCode}</div>
+                    </div>
                   </div>
-                  <div className="md:hidden divide-y divide-slate-100">
-                    {parties.map((p) => (
-                      <article key={p.id} className="p-4 space-y-3 hover:bg-blue-50/30 transition-colors">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <h3 className="font-bold text-slate-900 break-words">{p.name}</h3>
-                            <p className="text-[11px] font-mono text-slate-500 mt-1 break-all">{p.gstin || 'UNREGISTERED'}</p>
-                          </div>
-                          <span className={`shrink-0 px-2.5 py-1 rounded-lg text-[10px] font-bold ${
-                            p.type === 'CUSTOMER'
-                              ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                              : 'bg-amber-50 text-amber-700 border border-amber-200'
-                          }`}>{p.type}</span>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="rounded-2xl bg-slate-50/80 border border-slate-200/80 p-3 shadow-[var(--shadow-soft)]">
-                            <span className="block text-[10px] uppercase tracking-wider text-slate-400">State</span>
-                            <span className="text-xs font-semibold text-slate-700">{p.state} ({p.stateCode})</span>
-                          </div>
-                          <div className="rounded-xl bg-slate-50 border border-slate-100 p-3">
-                            <span className="block text-[10px] uppercase tracking-wider text-slate-400">Balance</span>
-                            {p.currentBalance > 0 ? (
-                              <span className="text-xs font-bold text-emerald-600">+{p.currentBalance}</span>
-                            ) : (
-                              <span className="text-xs font-bold text-amber-600">{p.currentBalance}</span>
-                            )}
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => setSelectedPartyForLedger(p)}
-                          className="w-full min-h-11 px-3 py-2.5 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-500 hover:shadow-md shadow-sm transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
-                        >
-                          Open Statement
-                        </button>
-                      </article>
-                    ))}
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                      className="h-8 w-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700 hover:bg-slate-200 cursor-pointer"
+                      title="All Modules Menu"
+                    >
+                      <Menu className="w-4 h-4" />
+                    </button>
                   </div>
+                </div>
+
+                {/* PHONE SCROLLABLE WORKSPACE */}
+                <main className="flex-1 p-3 pb-24 overflow-y-auto w-full">
+                  {renderWorkspaceContent()}
+                </main>
+
+                {/* PHONE BOTTOM NAVIGATION DOCK */}
+                <Sidebar
+                  activeTab={activeTab}
+                  setActiveTab={setActiveTab}
+                  isMobile={true}
+                  isMobileMenuOpen={isMobileMenuOpen}
+                  onCloseMobileMenu={() => setIsMobileMenuOpen(false)}
+                />
+
+                {/* HOME INDICATOR */}
+                <div className="absolute bottom-1 inset-x-0 z-40 pointer-events-none flex justify-center">
+                  <div className="w-24 h-1 bg-slate-950/20 rounded-full" />
                 </div>
               </div>
-            )}
-          </main>
-        </div>
+            </div>
+          </div>
+        ) : (
+          /* REGULAR VIEWPORT (RESPONSIVE DESKTOP & REAL MOBILE) */
+          <div className="flex flex-1 min-w-0">
+            <Sidebar
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              isMobile={false}
+              isMobileMenuOpen={isMobileMenuOpen}
+              onCloseMobileMenu={() => setIsMobileMenuOpen(false)}
+            />
+            <main className="flex-1 p-3 sm:p-5 lg:p-6 pb-24 lg:pb-8 overflow-y-auto max-w-[1440px] mx-auto w-full">
+              {renderWorkspaceContent()}
+            </main>
+          </div>
+        )}
       </div>
 
       {/* MODALS */}

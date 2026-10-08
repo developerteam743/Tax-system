@@ -41,12 +41,74 @@ export const SalesBilling: React.FC<SalesBillingProps> = ({ parties, stockItems,
     </div>
 
     <div className="bg-white/95 backdrop-blur-sm border border-slate-200 rounded-3xl shadow-[var(--shadow-soft)] overflow-hidden">
-      <div className="p-4 sm:p-5 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-blue-50/40 flex items-center justify-between"><span className="text-xs font-bold text-slate-800">Recent Sales Invoices Register ({salesInvoices.length} Bills)</span><span className="sm:hidden text-[10px] text-slate-400">Swipe table →</span></div>
-      <div className="overflow-x-auto"><table className="w-full min-w-[760px] text-left text-xs text-slate-700"><thead className="bg-slate-50 text-slate-500 uppercase text-[10px] tracking-wider font-bold border-b border-slate-200"><tr><th className="p-3">Invoice #</th><th className="p-3">Date</th><th className="p-3">Customer Party</th><th className="p-3">State Code</th><th className="p-3">Taxable Value</th><th className="p-3">GST Total</th><th className="p-3">Grand Total</th><th className="p-3 text-right">Actions</th></tr></thead><tbody className="divide-y divide-slate-100">{salesInvoices.map((inv) => <tr key={inv.id} className="hover:bg-blue-50/50 transition-colors duration-200"><td className="p-3 font-mono font-bold text-blue-700">{inv.invoiceNumber}</td><td className="p-3 text-slate-500 font-mono">{inv.date}</td><td className="p-3 font-bold text-slate-900">{inv.partyName}</td><td className="p-3 font-mono text-slate-600">{inv.partyStateCode} ({inv.placeOfSupply})</td><td className="p-3 text-slate-700">{formatCurrency(inv.subtotal)}</td><td className="p-3 font-mono text-purple-600 font-semibold">{formatCurrency(inv.cgstTotal + inv.sgstTotal + inv.igstTotal)}</td><td className="p-3 font-black text-slate-900 text-sm">{formatCurrency(inv.grandTotal)}</td><td className="p-3 text-right"><button onClick={() => setSelectedInvoiceForPrint(inv)} className="px-3.5 py-2.5 rounded-xl bg-blue-50 text-blue-700 font-bold border border-blue-200 hover:bg-blue-100 hover:-translate-y-0.5 hover:shadow-[var(--shadow-soft)] text-xs flex items-center gap-1.5 ml-auto cursor-pointer transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"><Printer className="w-3.5 h-3.5" /> Print Invoice</button></td></tr>)}</tbody></table></div>
+      <div className="p-4 sm:p-5 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-blue-50/40 flex items-center justify-between">
+        <span className="text-xs font-bold text-slate-800">Recent Sales Invoices Register ({salesInvoices.length} Bills)</span>
+        <span className="md:hidden text-[10px] text-slate-400">Mobile Cards</span>
+      </div>
+      <div className="hidden md:block overflow-x-auto">
+        <table className="w-full min-w-[760px] text-left text-xs text-slate-700">
+          <thead className="bg-slate-50 text-slate-500 uppercase text-[10px] tracking-wider font-bold border-b border-slate-200">
+            <tr>
+              <th className="p-3">Invoice #</th>
+              <th className="p-3">Date</th>
+              <th className="p-3">Customer Party</th>
+              <th className="p-3">State Code</th>
+              <th className="p-3">Taxable Value</th>
+              <th className="p-3">GST Total</th>
+              <th className="p-3">Grand Total</th>
+              <th className="p-3 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {salesInvoices.map((inv) => (
+              <tr key={inv.id} className="hover:bg-blue-50/50 transition-colors duration-200">
+                <td className="p-3 font-mono font-bold text-blue-700">{inv.invoiceNumber}</td>
+                <td className="p-3 text-slate-500 font-mono">{inv.date}</td>
+                <td className="p-3 font-bold text-slate-900">{inv.partyName}</td>
+                <td className="p-3 font-mono text-slate-600">{inv.partyStateCode} ({inv.placeOfSupply})</td>
+                <td className="p-3 text-slate-700">{formatCurrency(inv.subtotal)}</td>
+                <td className="p-3 font-mono text-purple-600 font-semibold">{formatCurrency(inv.cgstTotal + inv.sgstTotal + inv.igstTotal)}</td>
+                <td className="p-3 font-black text-slate-900 text-sm">{formatCurrency(inv.grandTotal)}</td>
+                <td className="p-3 text-right">
+                  <button onClick={() => setSelectedInvoiceForPrint(inv)} className="px-3.5 py-2.5 rounded-xl bg-blue-50 text-blue-700 font-bold border border-blue-200 hover:bg-blue-100 hover:-translate-y-0.5 hover:shadow-[var(--shadow-soft)] text-xs flex items-center gap-1.5 ml-auto cursor-pointer transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40">
+                    <Printer className="w-3.5 h-3.5" /> Print Invoice
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="md:hidden divide-y divide-slate-100">
+        {salesInvoices.map((inv) => (
+          <article key={inv.id} className="p-4 space-y-3 hover:bg-blue-50/30 transition-colors">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <span className="text-xs font-mono font-bold text-blue-700">{inv.invoiceNumber}</span>
+                <h4 className="font-bold text-slate-900 mt-0.5 text-sm break-words">{inv.partyName}</h4>
+                <div className="text-[11px] text-slate-500 font-mono mt-0.5">{inv.date} · State {inv.partyStateCode}</div>
+              </div>
+              <div className="text-right shrink-0">
+                <div className="text-sm font-black text-slate-900">{formatCurrency(inv.grandTotal)}</div>
+                <div className="text-[10px] text-purple-600 font-semibold font-mono">GST: {formatCurrency(inv.cgstTotal + inv.sgstTotal + inv.igstTotal)}</div>
+              </div>
+            </div>
+            <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100 text-xs">
+              <span className="text-slate-500 text-[11px]">Taxable: {formatCurrency(inv.subtotal)}</span>
+              <button
+                onClick={() => setSelectedInvoiceForPrint(inv)}
+                className="min-h-10 px-3 py-2 rounded-xl bg-blue-50 text-blue-700 font-bold border border-blue-200 hover:bg-blue-100 text-xs flex items-center gap-1.5 cursor-pointer"
+              >
+                <Printer className="w-3.5 h-3.5" /> Print Invoice
+              </button>
+            </div>
+          </article>
+        ))}
+      </div>
     </div>
 
     {showCreateModal && <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-start sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
-      <div className="bg-white/95 backdrop-blur-sm border border-slate-200 w-full max-w-4xl min-h-screen sm:min-h-0 sm:rounded-3xl p-4 sm:p-6 shadow-[var(--shadow-hover)] space-y-5 sm:space-y-6 my-0 sm:my-8 text-slate-800 animate-fadeIn">
+      <div className="bg-white/95 backdrop-blur-sm border border-slate-200 w-full max-w-4xl min-h-screen sm:min-h-0 sm:rounded-3xl p-4 sm:p-6 shadow-[var(--shadow-hover)] space-y-5 sm:space-y-6 my-0 sm:my-8 text-slate-800 animate-fadeIn max-h-[100dvh] sm:max-h-[calc(100dvh-2rem)] overflow-y-auto">
         <div className="flex items-start justify-between gap-3 border-b border-slate-100 pb-4"><div className="min-w-0"><h3 className="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2"><Sparkles className="w-5 h-5 text-blue-600 shrink-0" /> Fast GST Sales Bill Builder</h3><p className="text-xs text-slate-500 mt-1 leading-relaxed">Default Place of Supply: Gujarat (State 24). Auto-selects CGST+SGST vs IGST.</p></div><button onClick={() => setShowCreateModal(false)} aria-label="Close invoice builder" className="shrink-0 min-h-10 min-w-10 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100"><X className="w-5 h-5" /></button></div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4"><div><label className="text-xs font-bold text-slate-700 block mb-1">Select Customer Party</label><select value={selectedPartyId} onChange={(e) => setSelectedPartyId(e.target.value)} className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-3 text-xs font-semibold focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/15">{parties.filter((p) => p.type === 'CUSTOMER').map((p) => <option key={p.id} value={p.id}>{p.name} ({p.gstin}) - State {p.stateCode}</option>)}</select></div><div><label className="text-xs font-bold text-slate-700 block mb-1">Invoice Date</label><input type="date" value={invoiceDate} onChange={(e) => setInvoiceDate(e.target.value)} className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-xs font-semibold focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/15 transition-colors" /></div></div>
         <div className="space-y-3"><div className="flex items-center justify-between gap-3"><span className="text-xs font-bold uppercase tracking-wider text-slate-500">Bill Line Items</span><button onClick={handleAddLine} className="text-xs font-bold text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-xl px-2 py-2 flex items-center gap-1 cursor-pointer transition-colors"><Plus className="w-3.5 h-3.5" /> Add Item Line</button></div>

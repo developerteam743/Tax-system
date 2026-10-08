@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "node scripts/serve.js",
+    "dev": "node scripts/build.js && node scripts/serve.js",
     "build": "node scripts/build.js && node scripts/smokeTest.js",
     "serve": "node scripts/serve.js",
     "test:smoke": "node scripts/smokeTest.js",
@@ -29,7 +29,6 @@
     "@types/react-dom": "^19.2.3",
     "babel-plugin-react-compiler": "^1.0.0",
     "jsdom": "^30.0.1",
-    "puppeteer": "^25.7.0",
     "typescript": "~6.0.2"
   }
 }

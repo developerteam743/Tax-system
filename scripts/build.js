@@ -225,5 +225,8 @@ bundle += `
 })();
 `;
 
+bundle = bundle.replace(/import\.meta\.env/g, '({ VITE_API_BASE_URL: "/api" })');
+bundle = bundle.replace(/import\.meta/g, '({ env: { VITE_API_BASE_URL: "/api" } })');
+
 fs.writeFileSync(path.join(distAssets, 'app.js'), bundle);
 console.log('Production build completed cleanly at dist/assets/app.js!');

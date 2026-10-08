@@ -7,12 +7,8 @@ console.log('🤖 TAXFLOW AI: AUTOMATED END-TO-END FLOW TEST RUNNER');
 console.log('====================================================\n');
 
 async function runE2E() {
-  let puppeteer;
-  try {
-    puppeteer = await import('puppeteer');
-  } catch (e) {
-    console.log('Installing puppeteer package...');
-  }
+  // Puppeteer stripped per AI Studio container constraints
+  console.log('E2E runner initialized.');
 }
 
 runE2E();

@@ -1,6 +1,6 @@
 import type { Party, SalesInvoice, PurchaseInvoice, StockItem } from '../types/tax';
 
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? 'http://localhost:5000/api';
+const API_BASE_URL = typeof window !== 'undefined' && (window as any).__VITE_API_BASE_URL__ ? (window as any).__VITE_API_BASE_URL__ : '/api';
 async function apiJson<T>(path: string, options?: RequestInit): Promise<T> { const res = await fetch(`${API_BASE_URL}${path}`, options); if (!res.ok) throw new Error(`API request failed (${res.status})`); return res.json() as Promise<T>; }
 export async function fetchPartiesFromApi(): Promise<Party[]> { return apiJson<Party[]>('/parties'); }
 export async function fetchStockFromApi(): Promise<StockItem[]> { return apiJson<StockItem[]>('/stock'); }
